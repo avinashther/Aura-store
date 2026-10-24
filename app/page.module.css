@@ -1,0 +1,19 @@
+.next {
+  min-height: 70vh;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 80px var(--page-pad);
+  scroll-margin-top: var(--header-h);
+}
+
+.next h2 {
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.next p {
+  opacity: 0.7;
+}
