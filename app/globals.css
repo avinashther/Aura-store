@@ -12,6 +12,7 @@
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   --header-h: 64px;
+  --max-w: 1280px;
   --page-pad: clamp(16px, 4vw, 40px);
 }
 
