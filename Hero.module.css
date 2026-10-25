@@ -6,8 +6,9 @@
   --step: calc(var(--H) / 135);             /* distance between 3D slices */
 
   position: relative;
-  min-height: 100vh;
-  min-height: 100svh;
+  /* the sticky header takes --header-h, so the hero fills what's left */
+  min-height: calc(100vh - var(--header-h));
+  min-height: calc(100svh - var(--header-h));
   width: 100%;
   display: grid;
   grid-template-rows: 1fr auto 1fr; /* top space | the word | button + tagline */

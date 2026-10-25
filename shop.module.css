@@ -1,0 +1,51 @@
+.page {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: clamp(32px, 5vw, 64px) var(--page-pad) 0;
+  min-height: 70vh;
+}
+.page h1 {
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(60, 87, 43, 0.2);
+}
+
+.chips,
+.sorts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 14px;
+}
+.sorts { gap: 18px; opacity: 0.85; }
+
+.chips a {
+  padding: 7px 16px;
+  border: 1px solid rgba(60, 87, 43, 0.4);
+  border-radius: 999px;
+  font-weight: 500;
+}
+.chips a:hover { background: var(--paper); }
+.chips a[aria-current="page"] {
+  background: var(--green);
+  color: var(--cream);
+  border-color: var(--green);
+}
+
+.sorts a { padding: 7px 0; }
+.sorts a[aria-current="true"] {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}

@@ -1,14 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import styles from "./Header.module.css";
 
-// Edit these arrays to change the menu. In Phase 2 the "#" links become
-// real pages (/shop, /collections, /story, /account, /cart).
+// Edit these arrays to change the menu.
+// "#" links are placeholders for pages we build in later phases.
 const LEFT_LINKS = [
-  { label: "Shop", href: "#new-arrivals" },
-  { label: "Collections", href: "#" },
-  { label: "Our story", href: "#" },
+  { label: "Shop", href: "/shop" },
+  { label: "New in", href: "/#new-arrivals" },
+  { label: "Our story", href: "/#story" },
 ];
 
 const RIGHT_LINKS = [
@@ -35,7 +36,7 @@ export default function Header() {
         <ul className={`${styles.links} ${styles.desktopOnly}`}>
           {LEFT_LINKS.map((l) => (
             <li key={l.label}>
-              <a href={l.href}>{l.label}</a>
+              <Link href={l.href}>{l.label}</Link>
             </li>
           ))}
         </ul>
@@ -51,15 +52,20 @@ export default function Header() {
           {open ? "Close" : "Menu"}
         </button>
 
+        {/* Small logo in the middle, always links home */}
+        <Link href="/" className={styles.brand} aria-label="AURA home">
+          AURA
+        </Link>
+
         {/* Right side */}
-        <ul className={styles.links}>
+        <ul className={`${styles.links} ${styles.right}`}>
           {RIGHT_LINKS.map((l) => (
             <li key={l.label} className={styles.desktopOnly}>
-              <a href={l.href}>{l.label}</a>
+              <Link href={l.href}>{l.label}</Link>
             </li>
           ))}
           <li>
-            <a href="#">Bag ({cartCount})</a>
+            <Link href="#">Bag ({cartCount})</Link>
           </li>
         </ul>
       </nav>
@@ -68,9 +74,9 @@ export default function Header() {
         <ul id="mobile-menu" className={`${styles.panel} ${styles.mobileOnly}`}>
           {[...LEFT_LINKS, ...RIGHT_LINKS].map((l) => (
             <li key={l.label}>
-              <a href={l.href} onClick={() => setOpen(false)}>
+              <Link href={l.href} onClick={() => setOpen(false)}>
                 {l.label}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

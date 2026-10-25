@@ -1,0 +1,55 @@
+.page {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 24px var(--page-pad) 0;
+}
+
+.crumbs { font-size: 14px; margin-bottom: 20px; opacity: 0.8; }
+.crumbs a { text-decoration: underline; text-underline-offset: 3px; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+}
+@media (min-width: 860px) {
+  .layout { grid-template-columns: 1.15fr 1fr; gap: 64px; align-items: start; }
+}
+
+.art {
+  aspect-ratio: 4 / 5;
+  background: #e3e1d6;
+  border-radius: 3px;
+  display: grid;
+  place-items: center;
+  padding: 12%;
+}
+.art svg, .art img { width: 100%; height: 100%; object-fit: cover; }
+
+.info h1 {
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.price { font-size: 22px; margin: 10px 0 18px; }
+.desc { max-width: 52ch; margin-bottom: 28px; opacity: 0.85; }
+.sold { font-weight: 700; margin-bottom: 24px; }
+
+.details {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(60, 87, 43, 0.2);
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.related { margin-top: clamp(56px, 8vw, 96px); }
+.related h2 {
+  font-size: clamp(24px, 3vw, 32px);
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+}
