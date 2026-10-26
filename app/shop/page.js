@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { ProductGrid } from "@/components/ProductCard";
-import { CATEGORIES, PRODUCTS } from "@/lib/products";
+import { CATEGORIES } from "@/lib/products";
+import { getProducts } from "@/lib/catalog";
 import styles from "./shop.module.css";
 
 export const metadata = { title: "Shop – AURA" };
@@ -27,9 +28,8 @@ export default function ShopPage({ searchParams }) {
 async function ShopContent({ searchParams }) {
   const { category, sort = "new" } = await searchParams;
 
-  let items = PRODUCTS.filter((p) => !category || p.category === category);
-  if (sort === "price-asc") items = [...items].sort((a, b) => a.price - b.price);
-  if (sort === "price-desc") items = [...items].sort((a, b) => b.price - a.price);
+  // The database does the filtering and sorting for us.
+  const items = await getProducts({ category, sort });
 
   // Builds a link like /shop?category=tops&sort=price-asc
   const href = (cat, s) => {

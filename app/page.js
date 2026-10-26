@@ -1,11 +1,13 @@
 import Link from "next/link";
 import Hero from "@/components/Hero";
 import { ProductGrid } from "@/components/ProductCard";
-import { CATEGORIES, PRODUCTS } from "@/lib/products";
+import { CATEGORIES } from "@/lib/products";
+import { getProducts, getCategoryCounts } from "@/lib/catalog";
 import styles from "./page.module.css";
 
-export default function Home() {
-  const newArrivals = PRODUCTS.filter((p) => p.isNew).slice(0, 4);
+export default async function Home() {
+  const newArrivals = await getProducts({ onlyNew: true, limit: 4 });
+  const counts = await getCategoryCounts();
 
   return (
     <>
@@ -25,7 +27,7 @@ export default function Home() {
         </div>
         <ul className={styles.cats}>
           {CATEGORIES.map((c) => {
-            const count = PRODUCTS.filter((p) => p.category === c.slug).length;
+            const count = counts[c.slug] ?? 0;
             return (
               <li key={c.slug}>
                 <Link href={`/shop?category=${c.slug}`} className={styles.cat}>

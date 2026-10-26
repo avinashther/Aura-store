@@ -1,11 +1,11 @@
-// Loads the fake products from lib/products.js into the real database.
-// Run it with:  npm run db:seed
+// Loads the starter products from prisma/seed-data.js into the real database.
+// Run it with:  npx tsx prisma/seed.js
 // It is safe to run again: products are matched by slug, so nothing is duplicated.
 
 import "dotenv/config";
 import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PRODUCTS } from "../lib/products.js";
+import { PRODUCTS } from "./seed-data.js";
 
 // The adapter is the "cable" between Prisma and your Neon database.
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
