@@ -26,6 +26,8 @@
   margin-bottom: 14px;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
+/* A real photo fills the whole box; the drawn placeholder keeps its padding. */
+.art:has(> img) { padding: 0; overflow: hidden; }
 .art svg,
 .art img {
   width: 100%;

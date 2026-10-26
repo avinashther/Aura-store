@@ -9,7 +9,8 @@ import { updateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { CATEGORIES } from "@/lib/products";
 import { endSession, passwordIsRight, requireAdmin, startSession } from "@/lib/adminAuth";
-import { SIZES, TYPES } from "./options";
+import { ALLOWED_FORMATS, UPLOAD_FOLDER, cloudinaryConfig, signParams } from "@/lib/cloudinary";
+import { MAX_IMAGES, SIZES, TYPES } from "./options";
 
 export async function login(formData) {
   if (!passwordIsRight(formData.get("password"))) {
@@ -23,6 +24,21 @@ export async function login(formData) {
 export async function logout() {
   await endSession();
   redirect("/admin/login");
+}
+
+// Gives the admin's browser a one-time permission slip to upload ONE photo to Cloudinary.
+// Without a valid admin login, nobody can get one.
+export async function getUploadSignature() {
+  await requireAdmin();
+  const { cloudName, apiKey, apiSecret } = cloudinaryConfig();
+  const timestamp = Math.floor(Date.now() / 1000);
+  const params = { allowed_formats: ALLOWED_FORMATS, folder: UPLOAD_FOLDER, timestamp };
+  return {
+    cloudName,
+    apiKey,
+    ...params,
+    signature: signParams(params, apiSecret),
+  };
 }
 
 // "Moss Boxy Tee!" → "moss-boxy-tee"
@@ -64,6 +80,14 @@ function readForm(formData) {
   if (!/^#[0-9a-fA-F]{6}$/.test(color)) return { error: "Pick a colour." };
   if (details.length > 10 || details.some((l) => l.length > 120)) return { error: "Details: max 10 lines, 120 letters each." };
 
+  // Photos must be addresses on OUR Cloudinary account, nothing else.
+  const images = formData.getAll("images").map(String);
+  const prefix = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/`;
+  if (images.length > MAX_IMAGES) return { error: `Max ${MAX_IMAGES} photos per product.` };
+  if (images.some((url) => !process.env.CLOUDINARY_CLOUD_NAME || !url.startsWith(prefix) || url.length > 500)) {
+    return { error: "One of the photos is not a valid upload. Remove it and upload it again." };
+  }
+
   const stock = {};
   for (const size of SIZES) {
     const n = Number(text(`stock_${size}`) || 0);
@@ -80,6 +104,7 @@ function readForm(formData) {
       type,
       color: color.toLowerCase(),
       details,
+      images,
       isNew: formData.get("isNew") === "on",
       isActive: formData.get("isActive") === "on",
     },
