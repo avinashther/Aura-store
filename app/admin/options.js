@@ -9,3 +9,6 @@ export const TYPES = [
   { value: "pants", label: "Pants" },
   { value: "jacket", label: "Jacket" },
 ];
+
+// How many photos one product can have.
+export const MAX_IMAGES = 6;

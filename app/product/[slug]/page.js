@@ -1,20 +1,20 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AddToBag from "@/components/AddToBag";
+import Gallery from "@/components/Gallery";
 import ProductArt from "@/components/ProductArt";
 import { ProductGrid } from "@/components/ProductCard";
 import { CATEGORIES, formatPrice, isSoldOut } from "@/lib/products";
-import { getAllSlugs, getProduct, getRelated } from "@/lib/catalog";
+import { getProduct, getRelated } from "@/lib/catalog";
 import styles from "./product.module.css";
 
 // [slug] in the folder name = a dynamic route.
 // /product/moss-boxy-tee  →  params.slug === "moss-boxy-tee"
 
-// Tell Next.js which product pages exist so it can build them ahead of time.
-export async function generateStaticParams() {
-  const slugs = await getAllSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
+// We do NOT pre-build every product page. A pre-built page can show the old version
+// for a moment after the admin saves a change. Instead, each page is put together
+// when someone visits it, using product data that the admin panel refreshes instantly.
 
 // Each product gets its own browser-tab title (good for Google too).
 export async function generateMetadata({ params }) {
@@ -24,7 +24,15 @@ export async function generateMetadata({ params }) {
   return { title: `${product.name} – AURA`, description: product.description };
 }
 
-export default async function ProductPage({ params }) {
+export default function ProductPage({ params }) {
+  return (
+    <Suspense fallback={<div className={styles.page} />}>
+      <ProductContent params={params} />
+    </Suspense>
+  );
+}
+
+async function ProductContent({ params }) {
   const { slug } = await params;
   const product = await getProduct(slug);
   if (!product) notFound(); // shows the 404 page
@@ -40,9 +48,13 @@ export default async function ProductPage({ params }) {
       </nav>
 
       <div className={styles.layout}>
-        <div className={styles.art}>
-          <ProductArt product={product} />
-        </div>
+        {product.images.length > 0 ? (
+          <Gallery images={product.images} name={product.name} />
+        ) : (
+          <div className={styles.art}>
+            <ProductArt product={product} />
+          </div>
+        )}
 
         <div className={styles.info}>
           <h1>{product.name}</h1>

@@ -1,3 +1,5 @@
+import { cloudinaryUrl } from "@/lib/products";
+
 // Draws a simple garment picture so we can build the shop before real photos
 // exist. If a product has an `image`, that photo is shown instead.
 
@@ -11,7 +13,7 @@ const SHAPES = {
 export default function ProductArt({ product }) {
   if (product.image) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={product.image} alt={product.name} />;
+    return <img src={cloudinaryUrl(product.image, 700)} alt={product.name} loading="lazy" />;
   }
 
   return (

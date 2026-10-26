@@ -24,6 +24,7 @@
   place-items: center;
   padding: 12%;
 }
+.art:has(> img) { padding: 0; overflow: hidden; }
 .art svg, .art img { width: 100%; height: 100%; object-fit: cover; }
 
 .info h1 {

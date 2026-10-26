@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/products";
 import { saveProduct } from "./actions";
+import ImageUploader from "./ImageUploader";
 import { SIZES, TYPES } from "./options";
 import styles from "./admin.module.css";
 
 // One form for both "Add product" (no product) and "Edit product" (product given).
-// It has no client-side code at all: the browser just submits it to saveProduct.
+// The form itself runs on the server; only the photo uploader needs the browser.
 export default function ProductForm({ product, error }) {
   const stock = Object.fromEntries((product?.variants ?? []).map((v) => [v.size, v.stock]));
 
@@ -65,6 +66,8 @@ export default function ProductForm({ product, error }) {
           ))}
         </div>
       </fieldset>
+
+      <ImageUploader initial={product?.images ?? []} />
 
       <label>
         Details (one per line)

@@ -24,6 +24,19 @@ lib/
 public/            images and files served as-is (put product photos here for now)
 ```
 
+## Settings (.env)
+
+These live in a file called `.env` in the project folder. It is private and never goes to GitHub.
+
+```
+DATABASE_URL="postgresql://..."        # from Neon (Connect button)
+ADMIN_PASSWORD="..."                   # password for /admin (8+ characters)
+SESSION_SECRET="..."                   # any long random text (16+ characters)
+CLOUDINARY_CLOUD_NAME="..."            # from Cloudinary (Settings, API Keys)
+CLOUDINARY_API_KEY="..."
+CLOUDINARY_API_SECRET="..."
+```
+
 ## Roadmap
 
 - [x] Phase 1 – Foundation: Next.js, design tokens, hero, navbar

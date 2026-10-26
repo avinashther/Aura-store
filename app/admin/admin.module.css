@@ -164,3 +164,37 @@
   gap: 10px;
   font-weight: 400;
 }
+
+/* Photo previews in the product form */
+.photos {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.photos img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #e3e1d6;
+  display: block;
+}
+.photoActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 400;
+}
+.photoActions button {
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  font: inherit;
+  color: var(--green);
+  text-decoration: underline;
+  cursor: pointer;
+}
