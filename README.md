@@ -27,7 +27,7 @@ public/            images and files served as-is (put product photos here for no
 ## Roadmap
 
 - [x] Phase 1 – Foundation: Next.js, design tokens, hero, navbar
-- [ ] Phase 2 – Static pages: product grid, product page, footer
+- [x] Phase 2 – Static pages: product grid, product page, footer
 - [ ] Phase 3 – Database
 - [ ] Phase 4 – Admin panel
 - [ ] Phase 5 – Auth
