@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+import { addToBag } from "@/lib/cartStore";
 import styles from "./AddToBag.module.css";
 
 // The size picker + "Add to bag" button.
@@ -19,8 +21,21 @@ export default function AddToBag({ product }) {
       setMessage("Please pick a size first.");
       return;
     }
-    // Phase 6 will save this to a real cart. For now we only confirm.
-    setMessage(`Added: ${product.name}, size ${size}. (The real bag arrives in Phase 6.)`);
+    const result = addToBag(product.slug, size, product.sizes[size]);
+    if (result.ok) {
+      setMessage(
+        <>
+          Added: {product.name}, size {size}.{" "}
+          <Link href="/cart"><u>View bag</u></Link>
+        </>
+      );
+    } else if (result.reason === "max") {
+      setMessage(`You already have all ${result.have} we have in size ${size}.`);
+    } else if (result.reason === "full") {
+      setMessage("Your bag is full. Please check out first.");
+    } else {
+      setMessage("Couldn't save your bag. Please allow site storage in your browser.");
+    }
   };
 
   return (

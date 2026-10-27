@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useBagCount } from "@/lib/cartStore";
 import styles from "./Header.module.css";
 
 // Edit these arrays to change the menu.
@@ -19,7 +20,7 @@ const RIGHT_LINKS = [
 
 export default function Header() {
   const [open, setOpen] = useState(false); // is the mobile menu open?
-  const cartCount = 0; // will come from the cart in Phase 6
+  const cartCount = useBagCount(); // how many pieces are in the bag
 
   // Close the mobile menu with the Escape key
   useEffect(() => {
@@ -65,7 +66,7 @@ export default function Header() {
             </li>
           ))}
           <li>
-            <Link href="#">Bag ({cartCount})</Link>
+            <Link href="/cart">Bag ({cartCount})</Link>
           </li>
         </ul>
       </nav>
