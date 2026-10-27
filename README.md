@@ -32,6 +32,8 @@ These live in a file called `.env` in the project folder. It is private and neve
 DATABASE_URL="postgresql://..."        # from Neon (Connect button)
 ADMIN_PASSWORD="..."                   # password for /admin (8+ characters)
 SESSION_SECRET="..."                   # any long random text (16+ characters)
+BETTER_AUTH_SECRET="..."               # long random text (32+ characters) for customer logins
+BETTER_AUTH_URL="http://localhost:3000" # the site address (your real domain once deployed)
 CLOUDINARY_CLOUD_NAME="..."            # from Cloudinary (Settings, API Keys)
 CLOUDINARY_API_KEY="..."
 CLOUDINARY_API_SECRET="..."
@@ -41,9 +43,9 @@ CLOUDINARY_API_SECRET="..."
 
 - [x] Phase 1 – Foundation: Next.js, design tokens, hero, navbar
 - [x] Phase 2 – Static pages: product grid, product page, footer
-- [ ] Phase 3 – Database
-- [ ] Phase 4 – Admin panel
-- [ ] Phase 5 – Auth
+- [x] Phase 3 – Database
+- [x] Phase 4 – Admin panel (login, products, stock, photos)
+- [x] Phase 5 – Auth: customer sign up and login (admin still uses one shared password)
 - [ ] Phase 6 – Cart & checkout
 - [ ] Phase 7 – Payments
 - [ ] Phase 8 – Delivery

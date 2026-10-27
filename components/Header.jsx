@@ -14,7 +14,7 @@ const LEFT_LINKS = [
 
 const RIGHT_LINKS = [
   { label: "Search", href: "#" },
-  { label: "Account", href: "#" },
+  { label: "Account", href: "/account" },
 ];
 
 export default function Header() {

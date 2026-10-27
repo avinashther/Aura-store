@@ -1,0 +1,82 @@
+/* Sign up, log in and account pages. */
+
+.page {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 40px var(--page-pad) 72px;
+}
+
+.page h1 {
+  margin-bottom: 20px;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.form input {
+  font: inherit;
+  font-weight: 400;
+  padding: 11px 12px;
+  border: 1px solid rgb(60 87 43 / 0.45);
+  border-radius: 8px;
+  background: var(--white);
+  color: inherit;
+  width: 100%;
+}
+
+.primary,
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary {
+  background: var(--green);
+  color: var(--cream);
+  border: 1px solid var(--green);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--green);
+  border: 1px solid var(--green);
+}
+
+.error {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #f6dcd8;
+  color: #8a2a1c;
+}
+
+.alt {
+  margin-top: 20px;
+}
+
+.muted {
+  opacity: 0.75;
+  margin-bottom: 28px;
+}
+
+.box {
+  border-top: 1px solid rgb(60 87 43 / 0.2);
+  padding: 20px 0 28px;
+  margin-bottom: 8px;
+  display: grid;
+  gap: 8px;
+}
