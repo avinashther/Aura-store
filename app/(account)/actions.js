@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { APIError } from "better-auth/api";
 import { auth } from "@/lib/auth";
+import { safeNext } from "@/lib/redirects";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const text = (formData, key) => String(formData.get(key) ?? "").trim();
@@ -31,8 +32,9 @@ export async function signup(formData) {
         : "Could not create your account. Please try again.";
     }
   }
-  if (error) redirect(`/signup?error=${encodeURIComponent(error)}`);
-  redirect("/account");
+  const next = safeNext(text(formData, "next"));
+  if (error) redirect(`/signup?error=${encodeURIComponent(error)}&next=${encodeURIComponent(next)}`);
+  redirect(next);
 }
 
 export async function login(formData) {
@@ -48,8 +50,9 @@ export async function login(formData) {
     // use this form to find out which emails have accounts.
     error = e.statusCode === 429 ? "Too many attempts. Please wait a minute." : "Wrong email or password.";
   }
-  if (error) redirect(`/login?error=${encodeURIComponent(error)}`);
-  redirect("/account");
+  const next = safeNext(text(formData, "next"));
+  if (error) redirect(`/login?error=${encodeURIComponent(error)}&next=${encodeURIComponent(next)}`);
+  redirect(next);
 }
 
 export async function logout() {

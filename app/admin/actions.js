@@ -148,3 +148,42 @@ export async function saveProduct(formData) {
   updateTag("products"); // throw away the remembered pages so the shop shows the change now
   redirect("/admin?saved=1");
 }
+
+
+// What an order may change to. "delivered" and "cancelled" are final.
+const NEXT_STATUS = {
+  placed: ["shipped", "cancelled"],
+  shipped: ["delivered", "cancelled"],
+};
+
+export async function setOrderStatus(formData) {
+  await requireAdmin();
+  const id = Number(formData.get("id"));
+  const to = String(formData.get("status") ?? "");
+  if (!Number.isInteger(id) || id < 1) redirect("/admin/orders");
+
+  const restocked = await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { id }, include: { items: true } });
+    if (!order || !NEXT_STATUS[order.status]?.includes(to)) return false;
+
+    // "only if it is still in the status we just read": two admins clicking at once can't double-apply it.
+    const changed = await tx.order.updateMany({ where: { id, status: order.status }, data: { status: to } });
+    if (changed.count === 0) return false;
+
+    if (to === "cancelled") {
+      // Put the pieces back on the shelf.
+      for (const item of order.items) {
+        if (item.productId === null) continue;
+        await tx.variant.updateMany({
+          where: { productId: item.productId, size: item.size },
+          data: { stock: { increment: item.qty } },
+        });
+      }
+      return true;
+    }
+    return false;
+  });
+
+  if (restocked) updateTag("products");
+  redirect(`/admin/orders/${id}?updated=1`);
+}

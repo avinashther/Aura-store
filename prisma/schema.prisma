@@ -47,6 +47,7 @@ model User {
   updatedAt     DateTime  @default(now()) @updatedAt
   sessions      Session[]
   accounts      Account[]
+  orders        Order[]
 
   @@map("user")
 }
@@ -96,4 +97,50 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+// ---- Orders ----
+
+// One row per order. The delivery address is copied into the order (not linked to
+// the account), so changing an address later never rewrites an old order.
+model Order {
+  id            Int         @id @default(autoincrement())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  status        String      @default("placed") // placed, shipped, delivered, cancelled
+  paymentMethod String      @default("cod")    // cod = pay on delivery (online payment comes later)
+  subtotal      Int
+  shippingFee   Int
+  total         Int
+  shipName      String
+  shipPhone     String
+  shipLine1     String
+  shipLine2     String?
+  shipCity      String
+  shipState     String
+  shipPincode   String
+  createdAt     DateTime    @default(now())
+  items         OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("orders")
+}
+
+// One row per item in an order. name, price and photo are COPIED from the product at
+// the moment of purchase, so later price changes never alter an old order.
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int? // kept so a cancelled order can put the stock back
+  slug      String
+  name      String
+  size      String
+  qty       Int
+  price     Int // price of ONE piece when it was bought
+  image     String?
+
+  @@index([orderId])
+  @@map("order_items")
 }

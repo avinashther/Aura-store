@@ -66,8 +66,8 @@
   font-weight: 600;
   border-radius: 3px;
   box-shadow: 0 4px 0 var(--green-deep);
+  text-align: center;
 }
-.checkout:disabled { opacity: 0.55; cursor: not-allowed; }
 
 @media (max-width: 520px) {
   .line { grid-template-columns: 72px 1fr; }
