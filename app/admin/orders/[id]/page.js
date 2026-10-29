@@ -10,18 +10,18 @@ import styles from "../../admin.module.css";
 const ACTIONS = {
   placed: [
     { to: "shipped", label: "Mark as shipped" },
-    { to: "cancelled", label: "Cancel order (puts stock back)", danger: true },
+    { to: "cancelled", label: "Cancel order (puts stock back, refunds a paid order)", danger: true },
   ],
   shipped: [
     { to: "delivered", label: "Mark as delivered" },
-    { to: "cancelled", label: "Cancel order (puts stock back)", danger: true },
+    { to: "cancelled", label: "Cancel order (puts stock back, refunds a paid order)", danger: true },
   ],
 };
 
 export default async function AdminOrder({ params, searchParams }) {
   await requireAdmin();
   const { id: rawId } = await params;
-  const { updated } = await searchParams;
+  const { updated, error } = await searchParams;
   if (!/^\d{1,9}$/.test(rawId)) notFound();
 
   const order = await prisma.order.findUnique({
@@ -40,6 +40,11 @@ export default async function AdminOrder({ params, searchParams }) {
       </div>
 
       {updated && <p className={styles.ok} role="status">Order updated.</p>}
+      {error === "refund" && (
+        <p className={styles.error} role="alert">
+          The refund did not go through, so the order was NOT cancelled. Please try again, or refund it in the Razorpay dashboard.
+        </p>
+      )}
 
       <div className={styles.detail}>
         <p>Placed {formatDate(order.createdAt)}</p>
@@ -76,7 +81,17 @@ export default async function AdminOrder({ params, searchParams }) {
         </div>
         <p>Subtotal: {formatPrice(order.subtotal)}</p>
         <p>Shipping: {order.shippingFee === 0 ? "Free" : formatPrice(order.shippingFee)}</p>
-        <p><strong>Total to collect: {formatPrice(order.total)}</strong> ({PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod})</p>
+        {order.paymentMethod === "cod" ? (
+          <p><strong>Total to collect: {formatPrice(order.total)}</strong> (pay on delivery)</p>
+        ) : order.paidAt ? (
+          <p>
+            <strong>Total: {formatPrice(order.total)}, paid online</strong> on {formatDate(order.paidAt)}
+            <br />
+            <small>Razorpay payment {order.razorpayPaymentId}{order.refundId ? ` · refunded (${order.refundId})` : ""}</small>
+          </p>
+        ) : (
+          <p><strong>Total: {formatPrice(order.total)}</strong> (not paid)</p>
+        )}
 
         {ACTIONS[order.status] && (
           <>

@@ -1,14 +1,19 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/adminAuth";
+import { releaseExpiredOrders } from "@/lib/payments";
 import { STATUS_LABELS, formatDate, orderNumber } from "@/lib/orders";
 import { formatPrice } from "@/lib/products";
 import styles from "../admin.module.css";
 
-export default async function AdminOrders() {
+export default async function AdminOrders({ searchParams }) {
   await requireAdmin();
+  const { all } = await searchParams;
+  await releaseExpiredOrders();
 
+  // Unpaid and expired orders are hidden by default: only PAID orders need packing.
   const orders = await prisma.order.findMany({
+    where: all ? {} : { status: { notIn: ["awaiting_payment", "expired"] } },
     orderBy: { id: "desc" },
     take: 200,
     include: { user: { select: { email: true } }, _count: { select: { items: true } } },
@@ -19,12 +24,15 @@ export default async function AdminOrders() {
       <div className={styles.bar}>
         <h1>Orders</h1>
         <div className={styles.barRight}>
+          <Link href={all ? "/admin/orders" : "/admin/orders?all=1"} className={styles.ghost}>
+            {all ? "Hide unpaid" : "Show unpaid too"}
+          </Link>
           <Link href="/admin" className={styles.ghost}>Products</Link>
         </div>
       </div>
 
       {orders.length === 0 ? (
-        <p>No orders yet.</p>
+        <p>No paid orders yet.</p>
       ) : (
         <div className={styles.tableWrap}>
           <table className={styles.table}>

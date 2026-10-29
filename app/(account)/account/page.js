@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
+import { releaseExpiredOrders } from "@/lib/payments";
 import { STATUS_LABELS, formatDate, orderNumber } from "@/lib/orders";
 import { formatPrice } from "@/lib/products";
 import { logout } from "../actions";
@@ -11,6 +12,7 @@ export const metadata = { title: "Your account – AURA" };
 
 export default async function AccountPage() {
   const user = await requireUser();
+  await releaseExpiredOrders();
   const orders = await prisma.order.findMany({
     where: { userId: user.id },
     orderBy: { id: "desc" },

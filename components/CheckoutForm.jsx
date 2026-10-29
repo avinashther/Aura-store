@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { getBagLines } from "@/app/cart/actions";
-import { placeOrder } from "@/app/(account)/checkout/actions";
+import { startPayment } from "@/app/(account)/checkout/actions";
+import { verifyPayment } from "@/app/(account)/orders/actions";
+import { payWithRazorpay } from "@/lib/razorpayClient";
 import { clearBag, useBagItems } from "@/lib/cartStore";
 import { INDIAN_STATES, FREE_SHIPPING_OVER, shippingFor } from "@/lib/orders";
 import { formatPrice } from "@/lib/products";
@@ -18,8 +20,8 @@ export default function CheckoutForm({ defaultName }) {
   const items = useBagItems();
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
-  const [placed, setPlaced] = useState(false); // stays true while we move to the confirmation page
-  const [pending, startTransition] = useTransition();
+  const [placed, setPlaced] = useState(false); // stays true while we move to the order page
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     if (placed || items.length === 0) return;
@@ -35,7 +37,7 @@ export default function CheckoutForm({ defaultName }) {
   if (placed) {
     return (
       <div className={styles.page}>
-        <h1>Placing your order…</h1>
+        <h1>Taking you to your order…</h1>
       </div>
     );
   }
@@ -66,7 +68,7 @@ export default function CheckoutForm({ defaultName }) {
   const shipping = shippingFor(subtotal);
   const changed = data.lines.some((l) => l.missing || l.stock === 0 || l.qty < l.wanted);
 
-  function onSubmit(e) {
+  async function onSubmit(e) {
     e.preventDefault();
     if (pending) return;
     const form = new FormData(e.currentTarget);
@@ -74,18 +76,38 @@ export default function CheckoutForm({ defaultName }) {
       ["name", "phone", "line1", "line2", "city", "state", "pincode"].map((k) => [k, String(form.get(k) ?? "")])
     );
     setError("");
-    startTransition(async () => {
-      const result = await placeOrder(items, address);
-      if (result.ok) {
-        setPlaced(true);
-        clearBag();
-        router.push(`/orders/${result.id}?placed=1`);
-      } else if (result.login) {
-        router.push("/login?next=%2Fcheckout");
-      } else {
-        setError(result.error);
+    setPending(true);
+    try {
+      // 1. The server sets the pieces aside and creates the payment request.
+      const started = await startPayment(items, address);
+      if (!started.ok) {
+        if (started.login) router.push("/login?next=%2Fcheckout");
+        else setError(started.error);
+        setPending(false);
+        return;
       }
-    });
+
+      // The pieces now belong to this order, so the bag is emptied.
+      clearBag();
+      setPlaced(true);
+
+      // 2. Razorpay's window opens and the shopper pays.
+      const result = await payWithRazorpay(started.pay);
+
+      // 3. The server checks the proof of payment.
+      if (result.paid) {
+        const verified = await verifyPayment(started.orderId, result.response);
+        router.push(`/orders/${started.orderId}${verified.ok ? "?placed=1" : "?verify=1"}`);
+      } else {
+        // Closed the window without paying: the order waits (30 minutes) on its own page.
+        router.push(`/orders/${started.orderId}?unpaid=1`);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+      setPlaced(false);
+      setPending(false);
+    }
   }
 
   return (
@@ -140,14 +162,14 @@ export default function CheckoutForm({ defaultName }) {
 
           <h2>Payment</h2>
           <p className={styles.pay}>
-            <strong>Pay on delivery</strong>
-            <span>Online payment (UPI, cards) is coming soon.</span>
+            <strong>Pay securely online</strong>
+            <span>UPI, cards and netbanking, through Razorpay. Your payment details never touch our website.</span>
           </p>
 
           {error && <p className={styles.error} role="alert">{error}</p>}
 
           <button type="submit" className={styles.place} disabled={pending || lines.length === 0}>
-            {pending ? "Placing order…" : `Place order · ${formatPrice(subtotal + shipping)}`}
+            {pending ? "Opening payment…" : `Pay ${formatPrice(subtotal + shipping)}`}
           </button>
         </form>
 

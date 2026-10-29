@@ -107,8 +107,9 @@ model Order {
   id            Int         @id @default(autoincrement())
   userId        String
   user          User        @relation(fields: [userId], references: [id], onDelete: Restrict)
-  status        String      @default("placed") // placed, shipped, delivered, cancelled
-  paymentMethod String      @default("cod")    // cod = pay on delivery (online payment comes later)
+  // awaiting_payment -> placed (paid) -> shipped -> delivered. Also: cancelled, expired.
+  status        String      @default("placed")
+  paymentMethod String      @default("online") // online = Razorpay. (cod = old pay-on-delivery orders)
   subtotal      Int
   shippingFee   Int
   total         Int
@@ -120,10 +121,17 @@ model Order {
   shipState     String
   shipPincode   String
   createdAt     DateTime    @default(now())
+  // Payment details (Razorpay)
+  razorpayOrderId   String?   @unique // Razorpay's id for this payment request
+  razorpayPaymentId String?   @unique // set once the money has arrived
+  paidAt            DateTime?
+  refundId          String?           // set if we gave the money back
+  expiresAt         DateTime?         // unpaid orders hold their stock only until this time
   items         OrderItem[]
 
   @@index([userId])
   @@index([status])
+  @@index([status, expiresAt])
   @@map("orders")
 }
 
