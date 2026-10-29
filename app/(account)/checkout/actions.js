@@ -1,14 +1,17 @@
 "use server";
 
-// Places an order. This is the most important function in the shop, so it trusts
-// NOTHING from the browser: it checks the address, re-reads every price and the stock
-// from the database, and does it all in ONE database transaction:
-//   either everything happens (stock reduced + order saved) or nothing does.
+// Starts an online payment. This is the most important function in the shop, so it
+// trusts NOTHING from the browser: it checks the address, re-reads every price and the
+// stock from the database, and does it all in ONE database transaction:
+//   either everything happens (stock set aside + order saved) or nothing does.
+// The order stays "awaiting payment" until Razorpay confirms the money (see orders/actions.js).
 
 import { updateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUser } from "@/lib/session";
-import { INDIAN_STATES, shippingFor } from "@/lib/orders";
+import { INDIAN_STATES, orderNumber, shippingFor } from "@/lib/orders";
+import { HOLD_MINUTES, MAX_UNPAID_ORDERS, releaseExpiredOrders, releaseOrder } from "@/lib/payments";
+import { createRazorpayOrder, razorpayConfigured, razorpayKeyId } from "@/lib/razorpay";
 
 // An error we WANT to show the shopper (as opposed to a bug).
 class OrderError extends Error {}
@@ -61,13 +64,26 @@ function checkItems(items) {
   return [...merged.values()];
 }
 
-export async function placeOrder(items, address) {
+export async function startPayment(items, address) {
   try {
     const user = await getUser();
     if (!user) return { ok: false, login: true, error: "Please log in to place your order." };
 
+    if (!razorpayConfigured()) {
+      console.error("startPayment: RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET are missing in .env");
+      return { ok: false, error: "Online payment is not set up yet. Please try again later." };
+    }
+
     const ship = checkAddress(address);
     const lines = checkItems(items);
+
+    // Orders nobody paid for in time give their pieces back first.
+    await releaseExpiredOrders({ invalidate: true });
+
+    const unpaid = await prisma.order.count({ where: { userId: user.id, status: "awaiting_payment" } });
+    if (unpaid >= MAX_UNPAID_ORDERS) {
+      throw new OrderError("You have unpaid orders waiting. Please pay for or cancel them in your account first.");
+    }
 
     const order = await prisma.$transaction(async (tx) => {
       const products = await tx.product.findMany({
@@ -120,7 +136,9 @@ export async function placeOrder(items, address) {
       return tx.order.create({
         data: {
           userId: user.id,
-          paymentMethod: "cod",
+          status: "awaiting_payment",
+          paymentMethod: "online",
+          expiresAt: new Date(Date.now() + HOLD_MINUTES * 60 * 1000),
           subtotal,
           shippingFee,
           total: subtotal + shippingFee,
@@ -133,15 +151,42 @@ export async function placeOrder(items, address) {
           shipPincode: ship.pincode,
           items: { create: orderItems },
         },
-        select: { id: true },
+        select: { id: true, total: true },
       });
     });
 
+    // The pieces are now set aside. Ask Razorpay for a payment request for this amount.
+    // If that fails, undo everything so the stock is not stuck.
+    let rzp;
+    try {
+      rzp = await createRazorpayOrder({
+        rupees: order.total,
+        receipt: orderNumber(order.id),
+        notes: { order: String(order.id) },
+      });
+      await prisma.order.update({ where: { id: order.id }, data: { razorpayOrderId: rzp.id } });
+    } catch (e) {
+      console.error("Razorpay order creation failed:", e);
+      await releaseOrder(order.id, "cancelled", {}, { invalidate: true });
+      return { ok: false, error: "We could not start the payment. Nothing was charged. Please try again." };
+    }
+
     updateTag("products"); // stock changed, so refresh the shop pages
-    return { ok: true, id: order.id };
+    return {
+      ok: true,
+      orderId: order.id,
+      pay: {
+        keyId: razorpayKeyId(),
+        razorpayOrderId: rzp.id,
+        amount: order.total * 100,
+        name: ship.name,
+        email: user.email,
+        phone: ship.phone,
+      },
+    };
   } catch (e) {
     if (e instanceof OrderError) return { ok: false, error: e.message };
-    console.error("placeOrder failed:", e);
-    return { ok: false, error: "Something went wrong. Your order was not placed. Please try again." };
+    console.error("startPayment failed:", e);
+    return { ok: false, error: "Something went wrong. You were not charged. Please try again." };
   }
 }

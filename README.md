@@ -37,6 +37,9 @@ BETTER_AUTH_URL="http://localhost:3000" # the site address (your real domain onc
 CLOUDINARY_CLOUD_NAME="..."            # from Cloudinary (Settings, API Keys)
 CLOUDINARY_API_KEY="..."
 CLOUDINARY_API_SECRET="..."
+RAZORPAY_KEY_ID="rzp_test_..."          # Razorpay dashboard: Account & Settings, API Keys (use TEST keys first)
+RAZORPAY_KEY_SECRET="..."
+RAZORPAY_WEBHOOK_SECRET="..."          # only needed once the site is online (see Razorpay Webhooks)
 ```
 
 ## Roadmap
@@ -47,5 +50,5 @@ CLOUDINARY_API_SECRET="..."
 - [x] Phase 4 – Admin panel (login, products, stock, photos)
 - [x] Phase 5 – Auth: customer sign up and login (admin still uses one shared password)
 - [x] Phase 6 – Cart & checkout (pay on delivery for now; admin can view and update orders)
-- [ ] Phase 7 – Payments
+- [x] Phase 7 – Online payments with Razorpay (stock held 30 minutes, refunds on cancel)
 - [ ] Phase 8 – Delivery

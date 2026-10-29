@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
+import { releaseExpiredOrders } from "@/lib/payments";
+import OrderPayActions from "@/components/OrderPayActions";
 import { PAYMENT_LABELS, STATUS_LABELS, formatDate, orderNumber } from "@/lib/orders";
 import { cloudinaryUrl, formatPrice } from "@/lib/products";
 import styles from "../orders.module.css";
@@ -11,7 +13,9 @@ export const metadata = { title: "Your order – AURA" };
 export default async function OrderPage({ params, searchParams }) {
   const user = await requireUser();
   const { id: rawId } = await params;
-  const { placed } = await searchParams;
+  const { placed, verify } = await searchParams;
+
+  await releaseExpiredOrders(); // anything unpaid for too long goes back on the shelf
 
   const id = /^\d{1,9}$/.test(rawId) ? Number(rawId) : null;
   if (id === null) notFound();
@@ -28,9 +32,26 @@ export default async function OrderPage({ params, searchParams }) {
     <div className={styles.page}>
       <h1>Order {orderNumber(order.id)}</h1>
       <p className={styles.muted}>Placed {formatDate(order.createdAt)}</p>
-      {placed && (
+      {order.status === "placed" && placed && (
         <p className={styles.thanks} role="status">
-          Thank you! Your order is placed. Please keep the money ready for when it arrives.
+          Thank you! Your payment is received and your order is placed. We will get it ready for delivery.
+        </p>
+      )}
+      {order.status === "awaiting_payment" && (
+        <>
+          <p className={styles.waiting} role="status">
+            {verify
+              ? "We are still confirming your payment. If money was taken, this page will update shortly and you will not be charged twice."
+              : "Your payment is not complete yet."}{" "}
+            We are holding your items until {formatDate(order.expiresAt)}.
+          </p>
+          <OrderPayActions orderId={order.id} />
+        </>
+      )}
+      {order.status === "expired" && (
+        <p className={styles.waiting} role="status">
+          This order was not paid in time, so the items went back on the shelf. If money was taken, it is refunded
+          automatically. <Link href="/shop"><u>Back to the shop</u></Link>
         </p>
       )}
       <p>
@@ -60,7 +81,14 @@ export default async function OrderPage({ params, searchParams }) {
         <p><span>Subtotal</span><span>{formatPrice(order.subtotal)}</span></p>
         <p><span>Shipping</span><span>{order.shippingFee === 0 ? "Free" : formatPrice(order.shippingFee)}</span></p>
         <p className={styles.grand}><span>Total</span><span>{formatPrice(order.total)}</span></p>
-        <p className={styles.muted}><span>Payment</span><span>{PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}</span></p>
+        <p className={styles.muted}>
+          <span>Payment</span>
+          <span>
+            {PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}
+            {order.paidAt && !order.refundId ? ` · paid ${formatDate(order.paidAt)}` : ""}
+            {order.refundId ? " · refunded" : ""}
+          </span>
+        </p>
       </div>
 
       <h2>Delivering to</h2>
