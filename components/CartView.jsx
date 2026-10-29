@@ -119,9 +119,9 @@ export default function CartView() {
               <span>Subtotal</span> <strong>{formatPrice(data.subtotal)}</strong>
             </p>
             <p className={styles.small}>Shipping is worked out at checkout.</p>
-            <button type="button" className={styles.checkout} disabled>
-              Checkout (coming next)
-            </button>
+            <Link href="/checkout" className={styles.checkout}>
+              Checkout
+            </Link>
           </div>
         </>
       )}

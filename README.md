@@ -46,6 +46,6 @@ CLOUDINARY_API_SECRET="..."
 - [x] Phase 3 – Database
 - [x] Phase 4 – Admin panel (login, products, stock, photos)
 - [x] Phase 5 – Auth: customer sign up and login (admin still uses one shared password)
-- [ ] Phase 6 – Cart & checkout
+- [x] Phase 6 – Cart & checkout (pay on delivery for now; admin can view and update orders)
 - [ ] Phase 7 – Payments
 - [ ] Phase 8 – Delivery
