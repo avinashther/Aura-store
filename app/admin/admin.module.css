@@ -198,3 +198,35 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Deleting */
+.linkDanger {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: #8a2a1c;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.dangerZone {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid rgb(138 42 28 / 0.35);
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+.dangerZone h2 { font-size: 20px; }
+.dangerBtn {
+  background: transparent;
+  color: #8a2a1c;
+  border: 1px solid #8a2a1c;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.dangerBtn:hover { background: #f6dcd8; }

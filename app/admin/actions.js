@@ -155,3 +155,14 @@ export async function saveProduct(formData) {
   redirect("/admin?saved=1");
 }
 
+// Removes a product for good. Its sizes (stock) go with it. The admin check comes first,
+// because anyone can send a request to an action without using our pages.
+export async function deleteProduct(formData) {
+  await requireAdmin();
+  const id = Number(formData.get("id"));
+  if (!Number.isInteger(id) || id < 1) redirect("/admin");
+
+  await prisma.product.deleteMany({ where: { id } }); // does nothing if it is already gone
+  updateTag("products"); // so the shop stops showing it right away
+  redirect("/admin?deleted=1");
+}
