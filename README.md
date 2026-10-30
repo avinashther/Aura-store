@@ -38,6 +38,17 @@ CLOUDINARY_API_SECRET="..."
 NEXT_PUBLIC_WHATSAPP_NUMBER="919876543210" # the seller's WhatsApp: country code first, no + or spaces
 ```
 
+## Seeing the site on your phone (while building)
+
+1. Put the phone on the **same network as the laptop**. A phone hotspot counts: connect the laptop to it.
+2. Run `npm run dev` on the laptop. It prints a line like `Network: http://10.159.146.51:3000`.
+3. Type exactly that address into the phone's browser.
+
+If the page loads but nothing responds, restart `npm run dev` once (the allowed addresses are in `next.config.mjs`).
+If the phone cannot reach the laptop at all (some hotspots and Windows Firewall block it), try a tunnel:
+`npx localtunnel --port 3000` prints a public address you can open on the phone.
+The easiest option of all is the real website once it is deployed.
+
 ## Roadmap
 
 - [x] Phase 1 – Foundation: Next.js, design tokens, hero, navbar
