@@ -6,6 +6,7 @@
 import { updateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUser } from "@/lib/session";
+import { ONLINE_CHECKOUT } from "@/lib/shop";
 import { markPaid, releaseOrder } from "@/lib/payments";
 import { paymentSignatureIsValid, razorpayKeyId } from "@/lib/razorpay";
 
@@ -14,6 +15,7 @@ const text = (v) => (typeof v === "string" && v.length > 0 && v.length <= 100 ? 
 
 // The browser says "paid!" and sends proof. We check the proof ourselves.
 export async function verifyPayment(orderId, response) {
+  if (!ONLINE_CHECKOUT) return { ok: false, error: "Online checkout is not available." };
   try {
     const user = await getUser();
     if (!user) return { ok: false, error: "Please log in again." };
@@ -50,6 +52,7 @@ export async function verifyPayment(orderId, response) {
 
 // "Pay now" on an unpaid order: same Razorpay request, a fresh window.
 export async function retryPayment(orderId) {
+  if (!ONLINE_CHECKOUT) return { ok: false, error: "Online checkout is not available." };
   try {
     const user = await getUser();
     if (!user) return { ok: false, error: "Please log in again." };

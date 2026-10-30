@@ -37,6 +37,8 @@ BETTER_AUTH_URL="http://localhost:3000" # the site address (your real domain onc
 CLOUDINARY_CLOUD_NAME="..."            # from Cloudinary (Settings, API Keys)
 CLOUDINARY_API_KEY="..."
 CLOUDINARY_API_SECRET="..."
+NEXT_PUBLIC_WHATSAPP_NUMBER="919876543210" # the seller's WhatsApp: country code first, no + or spaces
+NEXT_PUBLIC_ONLINE_CHECKOUT="false"    # "true" turns on accounts + online payment (the Razorpay settings below)
 RAZORPAY_KEY_ID="rzp_test_..."          # Razorpay dashboard: Account & Settings, API Keys (use TEST keys first)
 RAZORPAY_KEY_SECRET="..."
 RAZORPAY_WEBHOOK_SECRET="..."          # only needed once the site is online (see Razorpay Webhooks)
@@ -49,6 +51,6 @@ RAZORPAY_WEBHOOK_SECRET="..."          # only needed once the site is online (se
 - [x] Phase 3 – Database
 - [x] Phase 4 – Admin panel (login, products, stock, photos)
 - [x] Phase 5 – Auth: customer sign up and login (admin still uses one shared password)
-- [x] Phase 6 – Cart & checkout (pay on delivery for now; admin can view and update orders)
-- [x] Phase 7 – Online payments with Razorpay (stock held 30 minutes, refunds on cancel)
+- [x] Phase 6 – Bag, plus "Order on WhatsApp" (customers chat with the seller; the seller closes the sale)
+- [x] Phase 7 – Online payments with Razorpay: built but switched OFF (set NEXT_PUBLIC_ONLINE_CHECKOUT="true" to use it)
 - [ ] Phase 8 – Delivery

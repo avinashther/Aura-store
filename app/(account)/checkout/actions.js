@@ -9,6 +9,7 @@
 import { updateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUser } from "@/lib/session";
+import { ONLINE_CHECKOUT } from "@/lib/shop";
 import { INDIAN_STATES, orderNumber, shippingFor } from "@/lib/orders";
 import { HOLD_MINUTES, MAX_UNPAID_ORDERS, releaseExpiredOrders, releaseOrder } from "@/lib/payments";
 import { createRazorpayOrder, razorpayConfigured, razorpayKeyId } from "@/lib/razorpay";
@@ -65,6 +66,8 @@ function checkItems(items) {
 }
 
 export async function startPayment(items, address) {
+  // Online checkout can be switched off in .env. Hidden buttons are not security, so refuse here too.
+  if (!ONLINE_CHECKOUT) return { ok: false, error: "Online checkout is not available. Please order on WhatsApp." };
   try {
     const user = await getUser();
     if (!user) return { ok: false, login: true, error: "Please log in to place your order." };

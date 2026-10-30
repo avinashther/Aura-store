@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/products";
+import { whatsappReady, whatsappUrl } from "@/lib/whatsapp";
 import styles from "./Footer.module.css";
 
 // Update this once a year. (Next.js 16 does not allow new Date() in server
@@ -33,7 +34,15 @@ export default function Footer() {
           <ul>
             <li><a href="#">Shipping</a></li>
             <li><a href="#">Returns</a></li>
-            <li><a href="#">Contact</a></li>
+            <li>
+              {whatsappReady ? (
+                <a href={whatsappUrl("Hi! I have a question about AURA.")} target="_blank" rel="noopener noreferrer">
+                  Chat on WhatsApp
+                </a>
+              ) : (
+                <a href="#">Contact</a>
+              )}
+            </li>
           </ul>
         </nav>
       </div>

@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { getBagLines } from "@/app/cart/actions";
 import { removeFromBag, setQty, useBagItems } from "@/lib/cartStore";
 import { formatPrice } from "@/lib/products";
+import { ONLINE_CHECKOUT } from "@/lib/shop";
+import { bagMessage, openWhatsApp, whatsappReady } from "@/lib/whatsapp";
 import ProductArt from "./ProductArt";
 import styles from "./CartView.module.css";
 
@@ -118,10 +120,28 @@ export default function CartView() {
             <p className={styles.subtotal}>
               <span>Subtotal</span> <strong>{formatPrice(data.subtotal)}</strong>
             </p>
-            <p className={styles.small}>Shipping is worked out at checkout.</p>
-            <Link href="/checkout" className={styles.checkout}>
-              Checkout
-            </Link>
+            {ONLINE_CHECKOUT ? (
+              <>
+                <p className={styles.small}>Shipping is worked out at checkout.</p>
+                <Link href="/checkout" className={styles.checkout}>
+                  Checkout
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className={styles.small}>
+                  Delivery and payment are arranged with the seller on WhatsApp. Nothing is charged here.
+                </p>
+                <button
+                  type="button"
+                  className={styles.checkout}
+                  disabled={!whatsappReady}
+                  onClick={() => openWhatsApp(bagMessage(lines, window.location.origin))}
+                >
+                  Order on WhatsApp
+                </button>
+              </>
+            )}
           </div>
         </>
       )}
