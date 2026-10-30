@@ -39,7 +39,7 @@ export const PRODUCTS = [
     isNew: true,
     description: "Roomy cargo pants with deep pockets and a tapered ankle.",
     details: ["Cotton twill", "Relaxed, tapered fit", "Machine wash cold"],
-    sizes: { 28: 4, 30: 6, 32: 6 },
+    sizes: { 28: 4, 30: 6, 32: 6, 34: 3 },
   },
   {
     slug: "sage-coach-jacket",
@@ -73,7 +73,7 @@ export const PRODUCTS = [
     color: "#1f2a1a",
     description: "Wide-leg trousers in a near-black green. Dress them up or down.",
     details: ["Cotton blend", "Wide leg", "Machine wash cold"],
-    sizes: { 28: 0, 30: 3, 32: 4 },
+    sizes: { 28: 0, 30: 3, 32: 4, 34: 2 },
   },
   {
     slug: "sand-relaxed-hoodie",

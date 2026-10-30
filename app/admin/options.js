@@ -2,9 +2,9 @@
 
 // Which sizes a product has depends on its category.
 // Bottoms use waist sizes in inches; everything else uses letters.
-// To add a size (say 34), add it to the list here. Nothing else needs to change.
+// To add a size (say 36), add it to the list here. Nothing else needs to change.
 const LETTER_SIZES = ["S", "M", "L", "XL"];
-const SIZES_BY_CATEGORY = { bottoms: ["28", "30", "32"] };
+const SIZES_BY_CATEGORY = { bottoms: ["28", "30", "32", "34"] };
 export const sizesFor = (category) => SIZES_BY_CATEGORY[category] ?? LETTER_SIZES;
 
 // "Shape" decides which placeholder garment is drawn until real photos exist.
