@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { CATEGORIES } from "@/lib/products";
 import { endSession, passwordIsRight, requireAdmin, startSession } from "@/lib/adminAuth";
 import { ALLOWED_FORMATS, UPLOAD_FOLDER, cloudinaryConfig, signParams } from "@/lib/cloudinary";
-import { MAX_IMAGES, SIZES, TYPES } from "./options";
+import { MAX_IMAGES, TYPES, sizesFor } from "./options";
 
 export async function login(formData) {
   if (!passwordIsRight(formData.get("password"))) {
@@ -88,8 +88,10 @@ function readForm(formData) {
     return { error: "One of the photos is not a valid upload. Remove it and upload it again." };
   }
 
+  // The sizes depend on the category (bottoms: 28, 30, 32. Others: S, M, L, XL).
+  const sizes = sizesFor(category);
   const stock = {};
-  for (const size of SIZES) {
+  for (const size of sizes) {
     const n = Number(text(`stock_${size}`) || 0);
     if (!Number.isInteger(n) || n < 0 || n > 9999) return { error: `Stock for ${size} must be a whole number, 0 or more.` };
     stock[size] = n;
@@ -109,6 +111,7 @@ function readForm(formData) {
       isActive: formData.get("isActive") === "on",
     },
     stock,
+    sizes,
   };
 }
 
@@ -118,7 +121,7 @@ export async function saveProduct(formData) {
 
   const id = Number(formData.get("id") || 0);
   const back = id ? `/admin/products/${id}` : "/admin/products/new";
-  const { data, stock, error } = readForm(formData);
+  const { data, stock, sizes, error } = readForm(formData);
   if (error) redirect(`${back}?error=${encodeURIComponent(error)}`);
 
   if (id) {
@@ -127,7 +130,10 @@ export async function saveProduct(formData) {
     // One transaction = either everything saves or nothing does.
     await prisma.$transaction([
       prisma.product.update({ where: { id }, data }),
-      ...SIZES.map((size) =>
+      // Sizes that don't belong to this category any more (say S/M/L on a product that is now
+      // "bottoms") are removed, so the shop only ever shows the right sizes.
+      prisma.variant.deleteMany({ where: { productId: id, size: { notIn: sizes } } }),
+      ...sizes.map((size) =>
         prisma.variant.upsert({
           where: { productId_size: { productId: id, size } },
           update: { stock: stock[size] },
@@ -140,7 +146,7 @@ export async function saveProduct(formData) {
       data: {
         ...data,
         slug: await uniqueSlug(data.name),
-        variants: { create: SIZES.map((size) => ({ size, stock: stock[size] })) },
+        variants: { create: sizes.map((size) => ({ size, stock: stock[size] })) },
       },
     });
   }

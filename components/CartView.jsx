@@ -39,6 +39,11 @@ export default function CartView() {
     return (
       <div className={styles.page}>
         <h1>Your bag</h1>
+        {notice && (
+          <p className={styles.notice} role="status">
+            Some items changed because they are sold out or we have fewer left than you chose.
+          </p>
+        )}
         <p>Your bag is empty.</p>
         <p>
           <Link href="/shop"><u>Keep shopping</u></Link>
