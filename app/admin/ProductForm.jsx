@@ -2,7 +2,8 @@ import Link from "next/link";
 import { CATEGORIES } from "@/lib/products";
 import { saveProduct } from "./actions";
 import ImageUploader from "./ImageUploader";
-import { SIZES, TYPES } from "./options";
+import CategorySizes from "./CategorySizes";
+import { TYPES } from "./options";
 import styles from "./admin.module.css";
 
 // One form for both "Add product" (no product) and "Edit product" (product given).
@@ -30,16 +31,9 @@ export default function ProductForm({ product, error }) {
         <input name="price" type="number" min="1" step="1" inputMode="numeric" defaultValue={product?.price} required />
       </label>
 
-      <div className={styles.row}>
-        <label>
-          Category
-          <select name="category" defaultValue={product?.category ?? CATEGORIES[0].slug}>
-            {CATEGORIES.map((c) => (
-              <option key={c.slug} value={c.slug}>{c.label}</option>
-            ))}
-          </select>
-        </label>
+      <CategorySizes defaultCategory={product?.category ?? CATEGORIES[0].slug} stock={stock} />
 
+      <div className={styles.row}>
         <label>
           Shape (until photos)
           <select name="type" defaultValue={product?.type ?? TYPES[0].value}>
@@ -54,18 +48,6 @@ export default function ProductForm({ product, error }) {
           <input name="color" type="color" defaultValue={product?.color ?? "#3c572b"} />
         </label>
       </div>
-
-      <fieldset>
-        <legend>Stock per size (0 = sold out)</legend>
-        <div className={styles.row}>
-          {SIZES.map((size) => (
-            <label key={size}>
-              {size}
-              <input name={`stock_${size}`} type="number" min="0" step="1" inputMode="numeric" defaultValue={stock[size] ?? 0} />
-            </label>
-          ))}
-        </div>
-      </fieldset>
 
       <ImageUploader initial={product?.images ?? []} />
 
