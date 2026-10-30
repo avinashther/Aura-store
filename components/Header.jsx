@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useBagCount } from "@/lib/cartStore";
+import { ONLINE_CHECKOUT } from "@/lib/shop";
 import styles from "./Header.module.css";
 
 // Edit these arrays to change the menu.
@@ -13,9 +14,10 @@ const LEFT_LINKS = [
   { label: "Our story", href: "/#story" },
 ];
 
+// Customer accounts are only needed for online checkout.
 const RIGHT_LINKS = [
   { label: "Search", href: "#" },
-  { label: "Account", href: "/account" },
+  ...(ONLINE_CHECKOUT ? [{ label: "Account", href: "/account" }] : []),
 ];
 
 export default function Header() {

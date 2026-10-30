@@ -37,6 +37,22 @@
 .add:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--green-deep); }
 .add:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--green-deep); }
 
+.add:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.secondary {
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px 28px;
+  background: transparent;
+  color: var(--green);
+  font-size: 16px;
+  font-weight: 600;
+  border: 1px solid var(--green);
+  border-radius: 3px;
+}
+.secondary:hover { background: var(--paper); }
+.trust { margin-top: 16px; font-size: 14px; opacity: 0.85; }
+.devNote { margin-top: 8px; font-size: 13px; color: #8a2a1c; }
+
 .message { min-height: 1.5em; margin-top: 16px; font-size: 14px; }
 
 @media (prefers-reduced-motion: reduce) {

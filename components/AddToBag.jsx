@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { addToBag } from "@/lib/cartStore";
+import { ONLINE_CHECKOUT } from "@/lib/shop";
+import { openWhatsApp, productMessage, whatsappReady } from "@/lib/whatsapp";
 import styles from "./AddToBag.module.css";
 
 // The size picker + "Add to bag" button.
@@ -32,10 +34,19 @@ export default function AddToBag({ product }) {
     } else if (result.reason === "max") {
       setMessage(`You already have all ${result.have} we have in size ${size}.`);
     } else if (result.reason === "full") {
-      setMessage("Your bag is full. Please check out first.");
+      setMessage("Your bag is full. Please send it on WhatsApp first.");
     } else {
       setMessage("Couldn't save your bag. Please allow site storage in your browser.");
     }
+  };
+
+  // "Order on WhatsApp": opens a chat with the seller, with this product and size typed in.
+  const chat = () => {
+    if (!size) {
+      setMessage("Please pick a size first.");
+      return;
+    }
+    openWhatsApp(productMessage(product, size, window.location.origin));
   };
 
   return (
@@ -57,9 +68,28 @@ export default function AddToBag({ product }) {
         ))}
       </div>
 
-      <button type="button" className={styles.add} onClick={add}>
-        Add to bag
-      </button>
+      {ONLINE_CHECKOUT ? (
+        <button type="button" className={styles.add} onClick={add}>
+          Add to bag
+        </button>
+      ) : (
+        <>
+          <button type="button" className={styles.add} onClick={chat} disabled={!whatsappReady}>
+            Order on WhatsApp
+          </button>
+          <button type="button" className={styles.secondary} onClick={add}>
+            Add to bag
+          </button>
+          <p className={styles.trust}>
+            Chat with us first. We confirm size, price and delivery with you on WhatsApp before you pay anything.
+          </p>
+          {!whatsappReady && process.env.NODE_ENV !== "production" && (
+            <p className={styles.devNote}>
+              Set NEXT_PUBLIC_WHATSAPP_NUMBER in .env (then restart) to turn this button on.
+            </p>
+          )}
+        </>
+      )}
 
       <p className={styles.message} role="status" aria-live="polite">
         {message}
