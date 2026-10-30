@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import { addToBag } from "@/lib/cartStore";
-import { ONLINE_CHECKOUT } from "@/lib/shop";
 import { openWhatsApp, productMessage, whatsappReady } from "@/lib/whatsapp";
 import styles from "./AddToBag.module.css";
 
@@ -68,27 +67,19 @@ export default function AddToBag({ product }) {
         ))}
       </div>
 
-      {ONLINE_CHECKOUT ? (
-        <button type="button" className={styles.add} onClick={add}>
-          Add to bag
-        </button>
-      ) : (
-        <>
-          <button type="button" className={styles.add} onClick={chat} disabled={!whatsappReady}>
-            Order on WhatsApp
-          </button>
-          <button type="button" className={styles.secondary} onClick={add}>
-            Add to bag
-          </button>
-          <p className={styles.trust}>
-            Chat with us first. We confirm size, price and delivery with you on WhatsApp before you pay anything.
-          </p>
-          {!whatsappReady && process.env.NODE_ENV !== "production" && (
-            <p className={styles.devNote}>
-              Set NEXT_PUBLIC_WHATSAPP_NUMBER in .env (then restart) to turn this button on.
-            </p>
-          )}
-        </>
+      <button type="button" className={styles.add} onClick={chat} disabled={!whatsappReady}>
+        Order on WhatsApp
+      </button>
+      <button type="button" className={styles.secondary} onClick={add}>
+        Add to bag
+      </button>
+      <p className={styles.trust}>
+        Chat with us first. We confirm size, price and delivery with you on WhatsApp before you pay anything.
+      </p>
+      {!whatsappReady && process.env.NODE_ENV !== "production" && (
+        <p className={styles.devNote}>
+          Set NEXT_PUBLIC_WHATSAPP_NUMBER in .env (then restart) to turn this button on.
+        </p>
       )}
 
       <p className={styles.message} role="status" aria-live="polite">

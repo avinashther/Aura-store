@@ -2,7 +2,6 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/adminAuth";
 import { formatPrice } from "@/lib/products";
-import { ONLINE_CHECKOUT } from "@/lib/shop";
 import { logout } from "./actions";
 import styles from "./admin.module.css";
 
@@ -22,7 +21,6 @@ export default async function AdminHome({ searchParams }) {
       <div className={styles.bar}>
         <h1>Products</h1>
         <div className={styles.barRight}>
-          {ONLINE_CHECKOUT && <Link href="/admin/orders" className={styles.ghost}>Orders</Link>}
           <Link href="/admin/products/new" className={styles.primary}>Add product</Link>
           <form action={logout}>
             <button type="submit" className={styles.ghost}>Log out</button>
