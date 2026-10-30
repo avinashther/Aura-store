@@ -7,7 +7,6 @@ import ProductArt from "@/components/ProductArt";
 import { ProductGrid } from "@/components/ProductCard";
 import { CATEGORIES, formatPrice, isSoldOut } from "@/lib/products";
 import { getProduct, getRelated } from "@/lib/catalog";
-import { releaseExpiredOrders } from "@/lib/payments";
 import styles from "./product.module.css";
 
 // [slug] in the folder name = a dynamic route.
@@ -35,7 +34,6 @@ export default function ProductPage({ params }) {
 
 async function ProductContent({ params }) {
   const { slug } = await params;
-  await releaseExpiredOrders(); // held items of unpaid, expired orders go back on the shelf
   const product = await getProduct(slug);
   if (!product) notFound(); // shows the 404 page
 

@@ -7,8 +7,6 @@
 import { redirect } from "next/navigation";
 import { updateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { restock } from "@/lib/payments";
-import { refundPayment } from "@/lib/razorpay";
 import { CATEGORIES } from "@/lib/products";
 import { endSession, passwordIsRight, requireAdmin, startSession } from "@/lib/adminAuth";
 import { ALLOWED_FORMATS, UPLOAD_FOLDER, cloudinaryConfig, signParams } from "@/lib/cloudinary";
@@ -151,48 +149,3 @@ export async function saveProduct(formData) {
   redirect("/admin?saved=1");
 }
 
-
-// What an order may change to. "delivered" and "cancelled" are final.
-const NEXT_STATUS = {
-  placed: ["shipped", "cancelled"],
-  shipped: ["delivered", "cancelled"],
-};
-
-export async function setOrderStatus(formData) {
-  await requireAdmin();
-  const id = Number(formData.get("id"));
-  const to = String(formData.get("status") ?? "");
-  if (!Number.isInteger(id) || id < 1) redirect("/admin/orders");
-
-  const order = await prisma.order.findUnique({ where: { id }, include: { items: true } });
-  if (!order || !NEXT_STATUS[order.status]?.includes(to)) redirect(`/admin/orders/${id}`);
-
-  // Cancelling a PAID order gives the customer their money back FIRST. If Razorpay
-  // refuses, the order stays as it is, so we never cancel without refunding.
-  let refundId = null;
-  if (to === "cancelled" && order.razorpayPaymentId && order.paidAt && !order.refundId) {
-    try {
-      refundId = (await refundPayment(order.razorpayPaymentId, order.total, { order: String(id) })).id;
-    } catch (e) {
-      console.error(`Refund for order ${id} failed:`, e);
-      redirect(`/admin/orders/${id}?error=refund`);
-    }
-  }
-
-  const restocked = await prisma.$transaction(async (tx) => {
-    // "only if it is still in the status we just read": two admins clicking at once can't double-apply it.
-    const changed = await tx.order.updateMany({
-      where: { id, status: order.status },
-      data: { status: to, ...(refundId ? { refundId } : {}) },
-    });
-    if (changed.count === 0) return false;
-    if (to === "cancelled") {
-      await restock(tx, order.items); // put the pieces back on the shelf
-      return true;
-    }
-    return false;
-  });
-
-  if (restocked) updateTag("products");
-  redirect(`/admin/orders/${id}?updated=1`);
-}

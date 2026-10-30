@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ProductGrid } from "@/components/ProductCard";
 import { CATEGORIES } from "@/lib/products";
 import { getProducts } from "@/lib/catalog";
-import { releaseExpiredOrders } from "@/lib/payments";
 import styles from "./shop.module.css";
 
 export const metadata = { title: "Shop – AURA" };
@@ -30,7 +29,6 @@ async function ShopContent({ searchParams }) {
   const { category, sort = "new" } = await searchParams;
 
   // The database does the filtering and sorting for us.
-  await releaseExpiredOrders(); // held items of unpaid, expired orders go back on the shelf
   const items = await getProducts({ category, sort });
 
   // Builds a link like /shop?category=tops&sort=price-asc
