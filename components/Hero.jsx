@@ -176,7 +176,7 @@ export default function Hero() {
     // No animation for people who asked for less motion: header logo is simply always there.
     if (window.matchMedia(REDUCED_MOTION).matches) {
       root.dataset.heroLogo = "docked";
-      return () => { delete root.dataset.heroLogo; };
+      return () => { root.dataset.heroLogo = "off"; };
     }
 
     let raf = 0;
@@ -212,7 +212,7 @@ export default function Hero() {
       if (raf) cancelAnimationFrame(raf);
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
-      delete root.dataset.heroLogo;
+      root.dataset.heroLogo = "off"; // Next keeps the old page in memory, so say "I'm gone"
     };
   }, []);
 
