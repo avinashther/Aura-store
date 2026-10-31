@@ -25,6 +25,13 @@
   filter: drop-shadow(0 2px 0 var(--green-deep));
 }
 
+/* On a page that has the big hero (the home page), the small logo stays hidden until the
+   big one has scrolled up and shrunk onto this exact spot (Hero.jsx then sets
+   data-hero-logo="docked" on <html>). Pure CSS, so there is no flash while loading. */
+:global(html:has([data-hero]):not([data-hero-logo="docked"])) .brand {
+  visibility: hidden;
+}
+
 .links {
   display: flex;
   align-items: center;
