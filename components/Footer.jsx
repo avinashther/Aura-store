@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "./Logo";
 import { CATEGORIES } from "@/lib/products";
 import { whatsappReady, whatsappUrl } from "@/lib/whatsapp";
 import styles from "./Footer.module.css";
@@ -12,7 +13,9 @@ export default function Footer() {
     <footer className={styles.footer}>
       <div className={styles.inner}>
         <div>
-          <p className={styles.logo}>AURA</p>
+          <p className={styles.logo} role="img" aria-label="AURA">
+            <Logo height={30} />
+          </p>
           <p className={styles.blurb}>New season clothing.</p>
         </div>
 

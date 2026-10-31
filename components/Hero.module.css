@@ -147,6 +147,26 @@
 
 @keyframes fadeIn { to { opacity: 1; } }
 
+/* ---- Phones: don't stretch the hero over the whole screen --------------
+   The logo is only about 100px tall on a phone, so a full-height hero left hundreds of
+   pixels of empty space around it. Here the hero is only as tall as its content, which
+   also lets the first products peek in below. */
+@media (max-width: 700px) {
+  .hero {
+    min-height: 0;
+    grid-template-rows: auto auto auto;
+    padding-top: 40px;
+  }
+  .wrap {
+    margin-bottom: 8px; /* room for the soft shadow under the letters */
+  }
+  .bottom {
+    align-self: start;
+    gap: 20px;
+    padding: 36px var(--page-pad) 44px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .letter { animation: none; }
   .f, .fs, .g { animation: none; }
