@@ -25,6 +25,15 @@
   filter: drop-shadow(0 2px 0 var(--green-deep));
 }
 
+/* On the home page the small logo stays hidden until the big hero logo has scrolled up and
+   shrunk onto this exact spot. Hero.jsx sets data-hero-logo on <html>:
+   "flying" (on its way), "docked" (arrived) or "off" (hero page left).
+   The first rule covers the moment before the page has loaded, so there is no flash. */
+:global(html:not([data-hero-logo]):has([data-hero])) .brand,
+:global(html[data-hero-logo="flying"]) .brand {
+  visibility: hidden;
+}
+
 .links {
   display: flex;
   align-items: center;

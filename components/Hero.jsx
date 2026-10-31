@@ -112,7 +112,10 @@ function Letter({ letter, index, gap, layers }) {
 
 export default function Hero() {
   const heroRef = useRef(null);
+  const wrapRef = useRef(null); // the empty slot in the page layout (never moves or scales)
+  const flyRef = useRef(null); //  the big word itself: this is what shrinks into the header
   const stageRef = useRef(null);
+  const progress = useRef(0); //   0 = resting in the hero, 1 = docked in the header
   const isSmall = useMediaQuery(SMALL_SCREEN);
   const layers = isSmall ? LITE_LAYERS : FULL_LAYERS;
 
@@ -144,8 +147,9 @@ export default function Hero() {
       const t = now / 1000;
       cx += (tx - cx) * 0.07;
       cy += (ty - cy) * 0.07;
-      const ry = Math.sin(t * 0.7) * 7 + cx * 12 - 8;
-      const rx = Math.cos(t * 0.5) * 2 - cy * 7 + 6;
+      const calm = 1 - progress.current; // the tilt settles flat as the word reaches the header
+      const ry = (Math.sin(t * 0.7) * 7 + cx * 12 - 8) * calm;
+      const rx = (Math.cos(t * 0.5) * 2 - cy * 7 + 6) * calm;
       stage.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
       frame = requestAnimationFrame(loop);
     };
@@ -160,10 +164,65 @@ export default function Hero() {
     };
   }, []);
 
+  // Scroll animation: as you scroll, the big word travels up with the page while it also
+  // shrinks. It is sized so it arrives exactly on the small logo in the header. When it
+  // gets there we hide it and let the header's own logo take over (data-hero-logo="docked").
+  useEffect(() => {
+    const root = document.documentElement;
+    const wrap = wrapRef.current;
+    const fly = flyRef.current;
+    if (!wrap || !fly) return;
+
+    // No animation for people who asked for less motion: header logo is simply always there.
+    if (window.matchMedia(REDUCED_MOTION).matches) {
+      root.dataset.heroLogo = "docked";
+      return () => { root.dataset.heroLogo = "off"; };
+    }
+
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const target = document.querySelector("[data-site-logo] svg");
+      if (!target) return;
+      const t = target.getBoundingClientRect(); // where the small logo is
+      const w = wrap.getBoundingClientRect();   // where the big word would sit if it didn't move
+      if (!w.height) return;
+
+      const scrollY = window.scrollY;
+      const startY = w.top + scrollY + w.height / 2; // centre of the word at scroll 0
+      const endY = t.top + t.height / 2;             // centre of the small logo
+      const distance = startY - endY;                // how far we must scroll to get there
+      const p = distance > 0 ? Math.min(1, Math.max(0, scrollY / distance)) : 1;
+      progress.current = p;
+
+      const endScale = t.height / w.height; // big letters → the small logo's height
+      fly.style.transform = `scale(${1 + (endScale - 1) * p})`;
+      fly.style.setProperty("--p", p);
+
+      const docked = p >= 1;
+      fly.style.visibility = docked ? "hidden" : "visible";
+      root.dataset.heroLogo = docked ? "docked" : "flying";
+    };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(update); };
+
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      root.dataset.heroLogo = "off"; // Next keeps the old page in memory, so say "I'm gone"
+    };
+  }, []);
+
   return (
-    <section className={styles.hero} ref={heroRef} aria-labelledby="hero-title">
-      <div className={styles.wrap}>
-        <div className={styles.shadow} />
+    <section className={styles.hero} ref={heroRef} aria-labelledby="hero-title" data-hero>
+      <div className={styles.wrap} ref={wrapRef}>
+       <div className={styles.fly} ref={flyRef}>
+        <div className={styles.shadowFade}>
+          <div className={styles.shadow} />
+        </div>
         <div className={styles.stage} ref={stageRef}>
           <h1 id="hero-title" className={styles.word} aria-label="AURA">
             {LETTERS.map((letter, n) => {
@@ -176,6 +235,7 @@ export default function Hero() {
             })}
           </h1>
         </div>
+       </div>
       </div>
 
       <div className={styles.bottom}>

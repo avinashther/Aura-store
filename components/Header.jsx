@@ -52,7 +52,7 @@ export default function Header() {
         </button>
 
         {/* Small logo in the middle, always links home */}
-        <Link href="/" className={styles.brand} aria-label="AURA home">
+        <Link href="/" data-site-logo className={styles.brand} aria-label="AURA home">
           <Logo height={22} />
         </Link>
 

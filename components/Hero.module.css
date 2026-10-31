@@ -13,16 +13,33 @@
   display: grid;
   grid-template-rows: 1fr auto 1fr; /* top space | the word | button + tagline */
   justify-items: center;
-  overflow: hidden;
+  /* clip sideways only: the word has to be free to travel up into the header */
+  overflow-x: clip;
   background:
     radial-gradient(ellipse 75% 60% at 50% 48%, #ffffff 0%, rgba(255, 255, 255, 0.75) 35%, rgba(255, 255, 255, 0) 72%),
     var(--cream);
 }
 
+/* .wrap just holds the space in the layout. The word inside (.fly) is what scales. */
 .wrap {
   grid-row: 2;
   position: relative;
+}
+
+.fly {
+  position: relative;
+  z-index: 30; /* above the sticky header (20) while it flies into it */
   perspective: 2200px;
+  transform-origin: 50% 50%;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.shadowFade {
+  position: absolute;
+  inset: 0;
+  opacity: calc(1 - var(--p, 0) * 1.6);
+  pointer-events: none;
 }
 
 .stage {
