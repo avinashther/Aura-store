@@ -10,6 +10,7 @@ import styles from "./Hero.module.css";
 /* ---- Settings you can tweak -------------------------------------------- */
 const FULL_LAYERS = 40; // how many stacked slices make the 3D depth (desktop)
 const LITE_LAYERS = 24; // fewer slices on phones so cheap devices don't lag
+const SPIN_TURNS = 1; // how many full turns the word makes on its way into the header
 const FRONT = "#3c572b";
 const SIDE_LIGHT = [60, 87, 43]; // colour of the slice just behind the front
 const SIDE_DARK = [9, 14, 6]; //   colour of the very back slice
@@ -150,7 +151,11 @@ export default function Hero() {
       const calm = 1 - progress.current; // the tilt settles flat as the word reaches the header
       const ry = (Math.sin(t * 0.7) * 7 + cx * 12 - 8) * calm;
       const rx = (Math.cos(t * 0.5) * 2 - cy * 7 + 6) * calm;
-      stage.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+      // One full spin while scrolling (eased so it starts and ends gently). It finishes at
+      // exactly 360° = facing front, just as the word lands in the header.
+      const k = progress.current;
+      const spin = k * k * (3 - 2 * k) * SPIN_TURNS * 360;
+      stage.style.transform = `rotateX(${rx}deg) rotateY(${ry + spin}deg)`;
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
