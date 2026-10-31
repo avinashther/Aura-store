@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import Logo from "./Logo";
 import { useBagCount } from "@/lib/cartStore";
 import styles from "./Header.module.css";
 
@@ -52,7 +53,7 @@ export default function Header() {
 
         {/* Small logo in the middle, always links home */}
         <Link href="/" className={styles.brand} aria-label="AURA home">
-          AURA
+          <Logo height={22} />
         </Link>
 
         {/* Right side */}

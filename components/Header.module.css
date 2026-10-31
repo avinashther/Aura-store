@@ -18,10 +18,11 @@
 }
 
 .brand {
-  font-weight: 800;
-  font-size: 19px;
-  letter-spacing: 0.2em;
-  margin-right: -0.2em; /* keeps the logo visually centred */
+  display: flex;
+  align-items: center;
+  color: var(--green);
+  /* a hard dark edge underneath, like the 3D letters in the hero */
+  filter: drop-shadow(0 2px 0 var(--green-deep));
 }
 
 .links {
