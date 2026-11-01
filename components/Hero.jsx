@@ -13,6 +13,10 @@ const SPIN_TURNS = 1; //    full turns the word makes on its way into the header
 const SMOOTHING = 14; //    higher = follows the scroll more tightly, lower = floatier
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
+// True once the 3D word has been shown at least once in this browser tab. When someone comes
+// back to the home page (e.g. from a product), we skip the fade-in and show it instantly.
+let shownBefore = false;
+
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const smooth = (a, b, v) => { const t = clamp01((v - a) / (b - a)); return t * t * (3 - 2 * t); };
 
@@ -48,7 +52,8 @@ export default function Hero() {
     canvas.className = styles.gl;
     canvas.setAttribute("aria-hidden", "true");
     glHost.appendChild(canvas);
-    flat.style.visibility = ""; // undo anything a previous run did to the flat logo
+    // On a return visit the flat logo is never shown (it would flash behind the 3D one).
+    flat.style.visibility = shownBefore ? "hidden" : "";
     flat.style.transform = "";
 
     // Less motion: the header logo is simply always there, and the hero logo stays put.
@@ -62,7 +67,8 @@ export default function Hero() {
     let raf = 0;
     let last = 0;
     let shown = 0; //  smoothed scroll progress (0 = resting in the hero, 1 = in the header)
-    let started = 0; // when the 3D entrance began
+    let started = shownBefore ? -1e9 : 0; // when the 3D entrance began (long ago = no entrance)
+    let first = true; // is this the first frame? (then there's no glide, we jump to the right place)
     let px = 0, py = 0, cx = 0, cy = 0; // pointer target / current, -1…1
     let hideFlatTimer = 0;
 
@@ -91,8 +97,10 @@ export default function Hero() {
       const dt = Math.min(0.05, (now - (last || now)) / 1000);
       last = now;
 
-      // Follow the scroll with a little glide (frame-rate independent).
-      if (scene) shown += (m.target - shown) * (1 - Math.exp(-SMOOTHING * dt));
+      // Follow the scroll with a little glide (frame-rate independent). Not on the very first
+      // frame: if the page comes back already scrolled, start at the right place.
+      if (first) { shown = m.target; first = false; }
+      else if (scene) shown += (m.target - shown) * (1 - Math.exp(-SMOOTHING * dt));
       else shown = m.target;
       if (Math.abs(m.target - shown) < 0.0005) shown = m.target;
 
@@ -137,10 +145,17 @@ export default function Hero() {
         if (!alive) return;
         scene = createScene(canvas, LETTERS); // throws when WebGL is missing → we keep the flat logo
         scene.resize(window.innerWidth, window.innerHeight);
-        started = performance.now();
+        if (shownBefore) {
+          // coming back: no fade, no overlap, just the 3D word right away
+          canvas.style.transition = "none";
+          flat.style.visibility = "hidden";
+        } else {
+          started = performance.now();
+          // once it is fully in, remove the flat one underneath
+          hideFlatTimer = window.setTimeout(() => { flat.style.visibility = "hidden"; }, 600);
+        }
         canvas.dataset.ready = "true"; // fades the 3D word in
-        // once it is fully in, remove the flat one underneath
-        hideFlatTimer = window.setTimeout(() => { flat.style.visibility = "hidden"; }, 600);
+        shownBefore = true;
         kick();
       })
       .catch((e) => console.warn("3D hero not available, keeping the flat logo:", e));
