@@ -1,247 +1,184 @@
 "use client";
 
-// "use client" = this component runs in the browser (it needs mouse events,
-// animation frames and state). Components without it run on the server.
+// "use client" = this component runs in the browser (it needs scroll events, animation
+// frames and state). Components without it run on the server.
 
-import { useEffect, useId, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef } from "react";
 import { LETTERS } from "@/lib/letters";
+import Logo from "./Logo";
 import styles from "./Hero.module.css";
 
-/* ---- Settings you can tweak -------------------------------------------- */
-const FULL_LAYERS = 40; // how many stacked slices make the 3D depth (desktop)
-const LITE_LAYERS = 24; // fewer slices on phones so cheap devices don't lag
-const SPIN_TURNS = 1; // how many full turns the word makes on its way into the header
-const FRONT = "#3c572b";
-const SIDE_LIGHT = [60, 87, 43]; // colour of the slice just behind the front
-const SIDE_DARK = [9, 14, 6]; //   colour of the very back slice
+/* ---- Settings you can tweak ---------------------------------------------- */
+const SPIN_TURNS = 1; //    full turns the word makes on its way into the header
+const SMOOTHING = 14; //    higher = follows the scroll more tightly, lower = floatier
 
-const SMALL_SCREEN = "(max-width: 700px)";
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
+const clamp01 = (v) => Math.min(1, Math.max(0, v));
+const smooth = (a, b, v) => { const t = clamp01((v - a) / (b - a)); return t * t * (3 - 2 * t); };
 
-// Blend between the light and dark side colours. t = 0 → light, t = 1 → dark.
-const shade = (t) =>
-  `rgb(${SIDE_LIGHT.map((v, i) => Math.round(v + (SIDE_DARK[i] - v) * t)).join(",")})`;
-
-/* Reads a media query and re-renders when it changes.
-   The `false` at the end is what the server assumes (no screen on the server). */
-function useMediaQuery(query) {
-  return useSyncExternalStore(
-    (onChange) => {
-      const mq = window.matchMedia(query);
-      mq.addEventListener("change", onChange);
-      return () => mq.removeEventListener("change", onChange);
-    },
-    () => window.matchMedia(query).matches,
-    () => false
-  );
-}
-
-/* One letter = a stack of SVG slices pushed back along the Z axis. */
-function Letter({ letter, index, gap, layers }) {
-  const gradientId = "glint" + useId().replace(/[^a-zA-Z0-9_]/g, "");
-
-  // With fewer layers, spread them further apart so total depth stays the same
-  // and thicken the outline slightly so no gaps show between slices.
-  const depthScale = FULL_LAYERS / layers;
-  const strokeWidth = 4 * depthScale;
-
-  const slices = [];
-  // Draw from the back (last) to the front (index 0) so the front sits on top.
-  for (let i = layers - 1; i >= 0; i--) {
-    const colour = i === 0 ? FRONT : shade(i / (layers - 1));
-    slices.push(
-      <svg
-        key={i}
-        viewBox={`${letter.x} 0 ${letter.w} 880`}
-        aria-hidden="true"
-        style={{ transform: `translateZ(calc(var(--step) * ${-i * depthScale}))` }}
-      >
-        {i === 0 && (
-          <defs>
-            <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2=".3">
-              <stop offset="0" stopColor="#fff" stopOpacity="0" />
-              <stop offset=".44" stopColor="#fff" stopOpacity="0" />
-              <stop offset=".5" stopColor="#fff" stopOpacity=".30" />
-              <stop offset=".56" stopColor="#fff" stopOpacity="0" />
-              <stop offset="1" stopColor="#fff" stopOpacity="0" />
-              <animateTransform
-                attributeName="gradientTransform"
-                type="translate"
-                values="-1.3 0; 1.3 0"
-                dur="5s"
-                repeatCount="indefinite"
-              />
-            </linearGradient>
-          </defs>
-        )}
-
-        <path
-          d={letter.d}
-          fillRule="evenodd"
-          fill={colour}
-          className={i === 0 ? styles.f : styles.fs}
-          style={{ "--c": colour }}
-          {...(i > 0 && {
-            stroke: colour,
-            strokeWidth,
-            strokeLinejoin: "round",
-          })}
-        />
-
-        {/* the moving shine across the front face */}
-        {i === 0 && (
-          <path
-            d={letter.d}
-            fillRule="evenodd"
-            className={styles.g}
-            fill={`url(#${gradientId})`}
-          />
-        )}
-      </svg>
-    );
-  }
-
-  return (
-    <div
-      className={styles.letter}
-      style={{ "--w": letter.w, "--n": index, "--g": gap }}
-    >
-      {slices}
-    </div>
-  );
-}
-
+/* How this works
+   1. The page first shows a FLAT logo (an SVG), so something is on screen instantly.
+   2. In the background we download the 3D scene (three.js). When it's ready, the 3D
+      word fades in on top of the flat one, in exactly the same place and size.
+   3. As you scroll, the word rises with the page, shrinks, and spins once, so it lands
+      exactly on the small logo in the header. Then we hide it and the header logo
+      takes over (data-hero-logo="docked" on <html>).
+   If 3D isn't available, or the person asked for less motion, step 1 is all they get
+   (the flat logo still shrinks into the header, just without the spin). */
 export default function Hero() {
   const heroRef = useRef(null);
-  const wrapRef = useRef(null); // the empty slot in the page layout (never moves or scales)
-  const flyRef = useRef(null); //  the big word itself: this is what shrinks into the header
-  const stageRef = useRef(null);
-  const progress = useRef(0); //   0 = resting in the hero, 1 = docked in the header
-  const isSmall = useMediaQuery(SMALL_SCREEN);
-  const layers = isSmall ? LITE_LAYERS : FULL_LAYERS;
+  const wrapRef = useRef(null); //   an empty slot that keeps the word's place in the layout
+  const flatRef = useRef(null); //   the flat logo
+  const glRef = useRef(null); //     the canvas the 3D word is drawn on
+  const shadowRef = useRef(null);
 
-  // Mouse / touch parallax: the whole word tilts gently towards the pointer.
-  useEffect(() => {
-    const hero = heroRef.current;
-    const stage = stageRef.current;
-    if (!hero || !stage) return;
-    if (window.matchMedia(REDUCED_MOTION).matches) return; // respect user setting
-
-    let tx = 0, ty = 0; // target (where the pointer is, -1 … 1)
-    let cx = 0, cy = 0; // current (eases towards the target)
-    let frame;
-
-    const setTarget = (x, y) => {
-      const r = hero.getBoundingClientRect();
-      tx = ((x - r.left) / r.width - 0.5) * 2;
-      ty = ((y - r.top) / r.height - 0.5) * 2;
-    };
-    const onMouse = (e) => setTarget(e.clientX, e.clientY);
-    const onTouch = (e) => setTarget(e.touches[0].clientX, e.touches[0].clientY);
-    const onLeave = () => { tx = 0; ty = 0; };
-
-    hero.addEventListener("mousemove", onMouse);
-    hero.addEventListener("touchmove", onTouch, { passive: true });
-    hero.addEventListener("mouseleave", onLeave);
-
-    const loop = (now) => {
-      const t = now / 1000;
-      cx += (tx - cx) * 0.07;
-      cy += (ty - cy) * 0.07;
-      const calm = 1 - progress.current; // the tilt settles flat as the word reaches the header
-      const ry = (Math.sin(t * 0.7) * 7 + cx * 12 - 8) * calm;
-      const rx = (Math.cos(t * 0.5) * 2 - cy * 7 + 6) * calm;
-      // One full spin while scrolling (eased so it starts and ends gently). It finishes at
-      // exactly 360° = facing front, just as the word lands in the header.
-      const k = progress.current;
-      const spin = k * k * (3 - 2 * k) * SPIN_TURNS * 360;
-      stage.style.transform = `rotateX(${rx}deg) rotateY(${ry + spin}deg)`;
-      frame = requestAnimationFrame(loop);
-    };
-    frame = requestAnimationFrame(loop);
-
-    // Cleanup: runs when the component is removed, so nothing keeps running.
-    return () => {
-      cancelAnimationFrame(frame);
-      hero.removeEventListener("mousemove", onMouse);
-      hero.removeEventListener("touchmove", onTouch);
-      hero.removeEventListener("mouseleave", onLeave);
-    };
-  }, []);
-
-  // Scroll animation: as you scroll, the big word travels up with the page while it also
-  // shrinks. It is sized so it arrives exactly on the small logo in the header. When it
-  // gets there we hide it and let the header's own logo take over (data-hero-logo="docked").
   useEffect(() => {
     const root = document.documentElement;
+    const hero = heroRef.current;
     const wrap = wrapRef.current;
-    const fly = flyRef.current;
-    if (!wrap || !fly) return;
+    const flat = flatRef.current;
+    const canvas = glRef.current;
+    const shadow = shadowRef.current;
+    if (!hero || !wrap || !flat || !canvas || !shadow) return;
 
-    // No animation for people who asked for less motion: header logo is simply always there.
+    // Less motion: the header logo is simply always there, and the hero logo stays put.
     if (window.matchMedia(REDUCED_MOTION).matches) {
       root.dataset.heroLogo = "docked";
       return () => { root.dataset.heroLogo = "off"; };
     }
 
+    let alive = true;
+    let scene = null; // set once the 3D scene is ready
     let raf = 0;
-    const update = () => {
-      raf = 0;
-      const target = document.querySelector("[data-site-logo] svg");
-      if (!target) return;
-      const t = target.getBoundingClientRect(); // where the small logo is
-      const w = wrap.getBoundingClientRect();   // where the big word would sit if it didn't move
-      if (!w.height) return;
+    let last = 0;
+    let shown = 0; //  smoothed scroll progress (0 = resting in the hero, 1 = in the header)
+    let started = 0; // when the 3D entrance began
+    let px = 0, py = 0, cx = 0, cy = 0; // pointer target / current, -1…1
+    let hideFlatTimer = 0;
 
+    const measure = () => {
+      const logo = document.querySelector("[data-site-logo] svg");
+      if (!logo) return null;
+      const t = logo.getBoundingClientRect(); // where the small logo is
+      const w = wrap.getBoundingClientRect(); //  where the big word would sit if it didn't move
+      if (!w.height) return null;
       const scrollY = window.scrollY;
-      const startY = w.top + scrollY + w.height / 2; // centre of the word at scroll 0
-      const endY = t.top + t.height / 2;             // centre of the small logo
-      const distance = startY - endY;                // how far we must scroll to get there
-      const p = distance > 0 ? Math.min(1, Math.max(0, scrollY / distance)) : 1;
-      progress.current = p;
-
-      const endScale = t.height / w.height; // big letters → the small logo's height
-      fly.style.transform = `scale(${1 + (endScale - 1) * p})`;
-      fly.style.setProperty("--p", p);
-
-      const docked = p >= 1;
-      fly.style.visibility = docked ? "hidden" : "visible";
-      root.dataset.heroLogo = docked ? "docked" : "flying";
+      const distance = w.top + scrollY + w.height / 2 - (t.top + t.height / 2);
+      return {
+        target: distance > 0 ? clamp01(scrollY / distance) : 1,
+        x: w.left + w.width / 2,
+        // rises with the page, but never goes above the small logo
+        y: Math.max(w.top + w.height / 2, t.top + t.height / 2),
+        endScale: t.height / w.height,
+        unit: w.height / 880, // screen pixels per artwork unit
+      };
     };
-    const schedule = () => { if (!raf) raf = requestAnimationFrame(update); };
 
-    update();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
+    const frame = (now) => {
+      raf = 0;
+      const m = measure();
+      if (!m) { raf = requestAnimationFrame(frame); return; }
+      const dt = Math.min(0.05, (now - (last || now)) / 1000);
+      last = now;
+
+      // Follow the scroll with a little glide (frame-rate independent).
+      if (scene) shown += (m.target - shown) * (1 - Math.exp(-SMOOTHING * dt));
+      else shown = m.target;
+      if (Math.abs(m.target - shown) < 0.0005) shown = m.target;
+
+      const scale = 1 + (m.endScale - 1) * shown;
+      const docked = shown >= 1;
+      shadow.style.opacity = String(clamp01(1 - shown * 1.8));
+
+      if (scene) {
+        cx += (px - cx) * 0.07;
+        cy += (py - cy) * 0.07;
+        const t = now / 1000;
+        const calm = 1 - smooth(0, 0.9, shown); // floating and tilt settle as it docks
+        const spin = smooth(0, 1, shown) * SPIN_TURNS * Math.PI * 2; // ends exactly facing front
+        const intro = 1 - Math.pow(1 - clamp01((now - started) / 1400), 3);
+        scene.update({
+          x: m.x,
+          y: m.y,
+          unit: m.unit * scale,
+          rotX: (Math.cos(t * 0.5) * 0.035 - cy * 0.12 - 0.07) * calm,
+          rotY: (Math.sin(t * 0.7) * 0.12 - cx * 0.2 + 0.12) * calm - (1 - intro) * 0.6 + spin,
+          time: t,
+          calm,
+          flat: smooth(0.82, 1, shown),
+          intro,
+        });
+        scene.render();
+        canvas.style.visibility = docked ? "hidden" : "visible";
+      } else {
+        flat.style.transform = `scale(${scale})`;
+        flat.style.visibility = docked ? "hidden" : "visible";
+      }
+
+      root.dataset.heroLogo = docked ? "docked" : "flying";
+      // Keep animating while the 3D word is showing (it floats). The flat one only moves on scroll.
+      if (scene && !docked) raf = requestAnimationFrame(frame);
+    };
+    const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+
+    // ---- download the 3D scene in the background ------------------------------
+    import("./heroScene")
+      .then(({ createScene }) => {
+        if (!alive) return;
+        scene = createScene(canvas, LETTERS); // throws when WebGL is missing → we keep the flat logo
+        scene.resize(window.innerWidth, window.innerHeight);
+        started = performance.now();
+        canvas.dataset.ready = "true"; // fades the 3D word in
+        // once it is fully in, remove the flat one underneath
+        hideFlatTimer = window.setTimeout(() => { flat.style.visibility = "hidden"; }, 600);
+        kick();
+      })
+      .catch((e) => console.warn("3D hero not available, keeping the flat logo:", e));
+
+    // ---- listeners -----------------------------------------------------------
+    const onResize = () => { scene?.resize(window.innerWidth, window.innerHeight); kick(); };
+    const setPointer = (x, y) => {
+      const r = hero.getBoundingClientRect();
+      px = ((x - r.left) / r.width - 0.5) * 2;
+      py = ((y - r.top) / r.height - 0.5) * 2;
+    };
+    const onMouse = (e) => setPointer(e.clientX, e.clientY);
+    const onTouch = (e) => setPointer(e.touches[0].clientX, e.touches[0].clientY);
+    const onLeave = () => { px = 0; py = 0; };
+
+    window.addEventListener("scroll", kick, { passive: true });
+    window.addEventListener("resize", onResize);
+    hero.addEventListener("mousemove", onMouse);
+    hero.addEventListener("touchmove", onTouch, { passive: true });
+    hero.addEventListener("mouseleave", onLeave);
+    kick();
+
+    // Cleanup when the component goes away, so nothing keeps running.
     return () => {
+      alive = false;
       if (raf) cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      root.dataset.heroLogo = "off"; // Next keeps the old page in memory, so say "I'm gone"
+      window.clearTimeout(hideFlatTimer);
+      window.removeEventListener("scroll", kick);
+      window.removeEventListener("resize", onResize);
+      hero.removeEventListener("mousemove", onMouse);
+      hero.removeEventListener("touchmove", onTouch);
+      hero.removeEventListener("mouseleave", onLeave);
+      scene?.dispose();
+      root.dataset.heroLogo = "off"; // Next keeps old pages in memory, so say "I'm gone"
     };
   }, []);
 
   return (
     <section className={styles.hero} ref={heroRef} aria-labelledby="hero-title" data-hero>
       <div className={styles.wrap} ref={wrapRef}>
-       <div className={styles.fly} ref={flyRef}>
-        <div className={styles.shadowFade}>
+        <div className={styles.shadowFade} ref={shadowRef}>
           <div className={styles.shadow} />
         </div>
-        <div className={styles.stage} ref={stageRef}>
-          <h1 id="hero-title" className={styles.word} aria-label="AURA">
-            {LETTERS.map((letter, n) => {
-              // Gap between this letter and the one before it, from the artwork.
-              const prev = LETTERS[n - 1];
-              const gap = prev ? letter.x - (prev.x + prev.w) : 0;
-              return (
-                <Letter key={n} letter={letter} index={n} gap={gap} layers={layers} />
-              );
-            })}
-          </h1>
-        </div>
-       </div>
+        <h1 id="hero-title" className={styles.fly} ref={flatRef} aria-label="AURA">
+          <Logo className={styles.flat} height={100} />
+        </h1>
       </div>
+      <canvas ref={glRef} className={styles.gl} aria-hidden="true" />
 
       <div className={styles.bottom}>
         <a href="#new-arrivals" className={styles.cta}>
