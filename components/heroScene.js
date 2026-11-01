@@ -78,7 +78,7 @@ export function createScene(canvas, letters) {
   const geometries = [];
   const meshes = letters.map((letter) => {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg"><path d="${letter.d}"/></svg>`;
-    const shapes = loader.parse(svg).paths.flatMap((p) => SVGLoader.createShapes(p));
+    const shapes = loader.parse(svg).paths.flatMap((p) => p.toShapes());
     const geometry = new ExtrudeGeometry(shapes, {
       depth: DEPTH,
       bevelEnabled: true,

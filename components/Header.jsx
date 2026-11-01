@@ -29,7 +29,7 @@ export default function Header() {
   }, [open]);
 
   return (
-    <header className={styles.header}>
+    <header className={`${styles.header} ${open ? styles.headerOpen : ""}`}>
       <nav className={styles.bar} aria-label="Main">
         {/* Desktop: links on the left */}
         <ul className={`${styles.links} ${styles.desktopOnly}`}>
