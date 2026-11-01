@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { ProductGrid } from "@/components/ProductCard";
+import ProductGridSkeleton from "@/components/ProductGridSkeleton";
 import { CATEGORIES } from "@/lib/products";
 import { getProducts } from "@/lib/catalog";
 import styles from "./shop.module.css";
@@ -17,7 +18,14 @@ const SORTS = [
 // inside <Suspense>: the page shell shows instantly, the product list streams in.
 export default function ShopPage({ searchParams }) {
   return (
-    <Suspense fallback={<div className={styles.page}><h1>Shop</h1></div>}>
+    <Suspense
+      fallback={
+        <div className={styles.page}>
+          <h1>Shop</h1>
+          <ProductGridSkeleton />
+        </div>
+      }
+    >
       <ShopContent searchParams={searchParams} />
     </Suspense>
   );

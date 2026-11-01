@@ -7,7 +7,17 @@ import styles from "./ProductCard.module.css";
 export default function ProductCard({ product }) {
   const soldOut = isSoldOut(product);
   return (
-    <CardLink href={`/product/${product.slug}`}>
+    <CardLink
+      href={`/product/${product.slug}`}
+      peek={{
+        slug: product.slug,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        type: product.type,
+        color: product.color,
+      }}
+    >
       <div className={styles.art}>
         <ProductArt product={product} />
         {soldOut ? (
