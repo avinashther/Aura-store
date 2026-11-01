@@ -2,6 +2,11 @@
   max-width: var(--max-w);
   margin: 0 auto;
   padding: 24px var(--page-pad) 0;
+  animation: pageIn 0.4s ease both; /* the page eases in instead of popping in */
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
 }
 
 .crumbs { font-size: 14px; margin-bottom: 20px; opacity: 0.8; }
@@ -53,4 +58,25 @@
   font-size: clamp(24px, 3vw, 32px);
   letter-spacing: -0.02em;
   margin-bottom: 24px;
+}
+
+/* ---- Loading screen (placeholder shapes with a soft shimmer) ---------------- */
+.sk,
+.skLine {
+  background: linear-gradient(100deg, #e5e3d8 30%, #f2f1ea 50%, #e5e3d8 70%);
+  background-size: 220% 100%;
+  animation: shimmer 1.3s linear infinite;
+  border-radius: 8px;
+}
+.skLine { height: 14px; margin-bottom: 12px; }
+.skTitle { height: 40px; width: 70%; margin-bottom: 14px; }
+.skPrice { height: 24px; width: 30%; margin: 10px 0 22px; }
+.skSizes { display: flex; gap: 10px; margin-bottom: 22px; }
+.skSizes span { width: 52px; height: 44px; }
+.skButton { height: 50px; width: 100%; max-width: 360px; }
+@keyframes shimmer { to { background-position: -220% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .page { animation: none; }
+  .sk, .skLine { animation: none; }
 }

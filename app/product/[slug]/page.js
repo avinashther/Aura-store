@@ -7,6 +7,7 @@ import ProductArt from "@/components/ProductArt";
 import { ProductGrid } from "@/components/ProductCard";
 import { CATEGORIES, formatPrice, isSoldOut } from "@/lib/products";
 import { getProduct, getRelated } from "@/lib/catalog";
+import ProductSkeleton from "./ProductSkeleton";
 import styles from "./product.module.css";
 
 // [slug] in the folder name = a dynamic route.
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }) {
 
 export default function ProductPage({ params }) {
   return (
-    <Suspense fallback={<div className={styles.page} />}>
+    <Suspense fallback={<ProductSkeleton />}>
       <ProductContent params={params} />
     </Suspense>
   );
