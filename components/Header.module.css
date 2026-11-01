@@ -9,6 +9,10 @@
   border-bottom: 1px solid rgba(60, 87, 43, 0.12);
 }
 
+/* While the mobile menu is open, the header must sit above the big hero logo
+   (which uses z-index 30 so it can fly into the header). */
+.headerOpen { z-index: 40; }
+
 .bar {
   height: var(--header-h);
   padding: 0 var(--page-pad);
