@@ -14,8 +14,6 @@ const LEFT_LINKS = [
   { label: "Our story", href: "/#story" },
 ];
 
-const RIGHT_LINKS = [{ label: "Search", href: "#" }];
-
 export default function Header() {
   const [open, setOpen] = useState(false); // is the mobile menu open?
   const cartCount = useBagCount(); // how many pieces are in the bag
@@ -58,11 +56,6 @@ export default function Header() {
 
         {/* Right side */}
         <ul className={`${styles.links} ${styles.right}`}>
-          {RIGHT_LINKS.map((l) => (
-            <li key={l.label} className={styles.desktopOnly}>
-              <Link href={l.href}>{l.label}</Link>
-            </li>
-          ))}
           <li>
             <Link href="/cart">Bag ({cartCount})</Link>
           </li>
@@ -71,7 +64,7 @@ export default function Header() {
 
       {open && (
         <ul id="mobile-menu" className={`${styles.panel} ${styles.mobileOnly}`}>
-          {[...LEFT_LINKS, ...RIGHT_LINKS].map((l) => (
+          {LEFT_LINKS.map((l) => (
             <li key={l.label}>
               <Link href={l.href} onClick={() => setOpen(false)}>
                 {l.label}
