@@ -1,0 +1,4 @@
+[build.environment]
+  # BETTER_AUTH_URL holds a plain localhost URL (not a secret) that also appears in
+  # Next.js's own server source maps, which made secrets scanning fail the build.
+  SECRETS_SCAN_OMIT_KEYS = "BETTER_AUTH_URL"
