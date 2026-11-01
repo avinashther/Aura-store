@@ -29,7 +29,7 @@ export default function Hero() {
   const heroRef = useRef(null);
   const wrapRef = useRef(null); //   an empty slot that keeps the word's place in the layout
   const flatRef = useRef(null); //   the flat logo
-  const glRef = useRef(null); //     the canvas the 3D word is drawn on
+  const glRef = useRef(null); //     an empty box; the 3D canvas is created inside it (see below)
   const shadowRef = useRef(null);
 
   useEffect(() => {
@@ -37,14 +37,24 @@ export default function Hero() {
     const hero = heroRef.current;
     const wrap = wrapRef.current;
     const flat = flatRef.current;
-    const canvas = glRef.current;
+    const glHost = glRef.current;
     const shadow = shadowRef.current;
-    if (!hero || !wrap || !flat || !canvas || !shadow) return;
+    if (!hero || !wrap || !flat || !glHost || !shadow) return;
+
+    // A brand-new canvas every time this effect starts. Next.js keeps the home page in memory
+    // when you open a product, and starts it again when you come back. A canvas whose 3D
+    // context was shut down can't be reused, so reusing it left the flat logo showing.
+    const canvas = document.createElement("canvas");
+    canvas.className = styles.gl;
+    canvas.setAttribute("aria-hidden", "true");
+    glHost.appendChild(canvas);
+    flat.style.visibility = ""; // undo anything a previous run did to the flat logo
+    flat.style.transform = "";
 
     // Less motion: the header logo is simply always there, and the hero logo stays put.
     if (window.matchMedia(REDUCED_MOTION).matches) {
       root.dataset.heroLogo = "docked";
-      return () => { root.dataset.heroLogo = "off"; };
+      return () => { canvas.remove(); root.dataset.heroLogo = "off"; };
     }
 
     let alive = true;
@@ -164,6 +174,7 @@ export default function Hero() {
       hero.removeEventListener("touchmove", onTouch);
       hero.removeEventListener("mouseleave", onLeave);
       scene?.dispose();
+      canvas.remove();
       root.dataset.heroLogo = "off"; // Next keeps old pages in memory, so say "I'm gone"
     };
   }, []);
@@ -178,7 +189,7 @@ export default function Hero() {
           <Logo className={styles.flat} height={100} />
         </h1>
       </div>
-      <canvas ref={glRef} className={styles.gl} aria-hidden="true" />
+      <div ref={glRef} aria-hidden="true" />
 
       <div className={styles.bottom}>
         <a href="#new-arrivals" className={styles.cta}>
