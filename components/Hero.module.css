@@ -1,9 +1,8 @@
 /* CSS Modules: class names here are private to Hero (React renames them
-   behind the scenes), so ".letter" can't clash with anything else. */
+   behind the scenes), so ".fly" can't clash with anything else. */
 
 .hero {
   --H: clamp(60px, min(25vw, 48vh), 430px); /* height of the letters */
-  --step: calc(var(--H) / 135);             /* distance between 3D slices */
 
   position: relative;
   /* the sticky header takes --header-h, so the hero fills what's left */
@@ -20,81 +19,53 @@
     var(--cream);
 }
 
-/* .wrap just holds the space in the layout. The word inside (.fly) is what scales. */
+/* .wrap just holds the word's place in the layout (same size as the word). */
 .wrap {
   grid-row: 2;
   position: relative;
+  height: var(--H);
+  width: calc(var(--H) * 3051 / 880); /* the logo artwork is 3051 x 880 */
 }
 
+/* The flat logo: shown instantly, and kept as the fallback if 3D isn't available. */
 .fly {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 30; /* above the sticky header (20) while it flies into it */
-  perspective: 2200px;
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
   transform-origin: 50% 50%;
   will-change: transform;
   pointer-events: none;
+  color: var(--green);
 }
+.flat {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The 3D word is drawn on this canvas, which covers the whole screen (but ignores clicks)
+   so the word can fly anywhere, including up into the header. */
+.gl {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.gl[data-ready="true"] { opacity: 1; }
 
 .shadowFade {
   position: absolute;
   inset: 0;
-  opacity: calc(1 - var(--p, 0) * 1.6);
   pointer-events: none;
 }
-
-.stage {
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-
-.word {
-  display: flex;
-  align-items: flex-start;
-  transform-style: preserve-3d;
-  font-size: inherit;
-  font-weight: inherit;
-}
-
-.letter {
-  position: relative;
-  flex: none;
-  height: var(--H);
-  width: calc(var(--H) * var(--w) / 880);
-  margin-left: calc(var(--H) * var(--g) / 880);
-  transform-style: preserve-3d;
-  animation: bob 5.5s ease-in-out infinite;
-  animation-delay: calc(var(--n) * 0.3s);
-}
-
-.letter svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-/* "True fade": the layers stay opaque; their colour goes from the page
-   colour to the final colour, so you never see through the 3D stack. */
-.f, .fs, .g {
-  animation-duration: 1.4s;
-  animation-timing-function: ease-out;
-  animation-fill-mode: both;
-  animation-delay: calc(var(--n) * 0.17s + 0.15s);
-}
-.f  { animation-name: fadeF; }
-.fs { animation-name: fadeFS; }
-.g  { animation-name: fadeG; }
-
-@keyframes fadeF  { from { fill: var(--paper); } to { fill: var(--c); } }
-@keyframes fadeFS { from { fill: var(--paper); stroke: var(--paper); } to { fill: var(--c); stroke: var(--c); } }
-@keyframes fadeG  { from { opacity: 0; } to { opacity: 1; } }
-
-@keyframes bob {
-  0%, 100% { transform: translateZ(0) translateY(0); }
-  50% { transform: translateZ(calc(var(--H) * 0.05)) translateY(calc(var(--H) * -0.02)); }
-}
-
 .shadow {
   position: absolute;
   left: 50%;
@@ -105,14 +76,10 @@
   background: radial-gradient(ellipse at center, rgba(60, 87, 43, 0.3), rgba(60, 87, 43, 0) 70%);
   filter: blur(8px);
   opacity: 0;
-  animation: fadeShadow 1s ease 1s forwards, shadowPulse 5.5s ease-in-out 2s infinite;
+  animation: fadeShadow 1s ease 1s forwards;
   pointer-events: none;
 }
 @keyframes fadeShadow { to { opacity: 0.9; } }
-@keyframes shadowPulse {
-  0%, 100% { transform: translateX(-50%) scale(1); }
-  50% { transform: translateX(-50%) scale(0.93); opacity: 0.6; }
-}
 
 /* ---- Button + tagline -------------------------------------------------- */
 .bottom {
@@ -181,9 +148,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .letter { animation: none; }
-  .f, .fs, .g { animation: none; }
+  .fly { animation: none; }
   .shadow { animation: none; opacity: 0.8; }
+  .gl { display: none; }
   .bottom { animation: none; opacity: 1; }
   .cta { transition: none; }
 }

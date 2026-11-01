@@ -2,7 +2,7 @@
   list-style: none;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 28px 16px;
+  gap: 28px 14px;
 }
 @media (min-width: 760px) {
   .grid { grid-template-columns: repeat(3, 1fr); gap: 40px 24px; }
@@ -11,20 +11,88 @@
   .grid { grid-template-columns: repeat(4, 1fr); }
 }
 
+/* ---- The card: a raised tile that floats above the page, with a soft green backlight ---- */
+.item {
+  position: relative;
+  isolation: isolate; /* keeps the glow behind this card only */
+  transition: opacity 0.2s ease;
+}
+
+/* The backlight: a blurred green glow sitting BEHIND the card, so it only shows around
+   the edges and spilling out underneath, like an LED strip behind a shelf. */
+.item::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 30% 3% -20px 3%;
+  border-radius: 40px;
+  background: radial-gradient(75% 90% at 50% 65%, rgba(122, 176, 84, 0.9), rgba(60, 87, 43, 0) 78%);
+  filter: blur(20px);
+  opacity: 0.6;
+  transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+/* hover / keyboard focus: the light gets stronger and spreads a little */
+.item:has(.card:hover)::before,
+.item:has(.card:focus-visible)::before {
+  opacity: 1;
+  transform: translateY(8px) scale(1.07);
+}
+/* clicked: a flash of light */
+.item:has(.launch)::before {
+  opacity: 1;
+  transform: translateY(12px) scale(1.2);
+  transition-duration: 0.26s;
+}
+
 .card {
+  position: relative;
   display: block;
+  padding: 8px 8px 14px;
+  background: #fbfaf6;
+  border: 1px solid rgba(60, 87, 43, 0.1);
+  border-radius: 16px;
+  /* layered shadows: a tight one for the edge, bigger softer ones for height */
+  box-shadow:
+    0 1px 2px rgba(9, 14, 6, 0.08),
+    0 10px 22px -8px rgba(9, 14, 6, 0.2),
+    0 26px 44px -20px rgba(9, 14, 6, 0.22);
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.28s ease;
+}
+
+/* Hover / keyboard focus: the card rises. */
+.card:hover,
+.card:focus-visible {
+  transform: translateY(-8px);
+  box-shadow:
+    0 1px 2px rgba(9, 14, 6, 0.08),
+    0 18px 30px -10px rgba(9, 14, 6, 0.24),
+    0 40px 60px -24px rgba(9, 14, 6, 0.26);
+}
+
+/* Clicked: a quick lift before the product page opens. */
+.launch {
+  animation: launch 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes launch {
+  0%   { transform: translateY(-8px) scale(1); }
+  55%  { transform: translateY(-16px) scale(1.055); }
+  100% { transform: translateY(-12px) scale(1.04); }
+}
+/* the other cards step back a little while one is opening */
+.grid:has(.launch) .item:not(:has(.launch)) {
+  opacity: 0.5;
 }
 
 .art {
   position: relative;
   aspect-ratio: 4 / 5;
   background: #e3e1d6;
-  border-radius: 3px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
   padding: 12%;
-  margin-bottom: 14px;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  margin-bottom: 12px;
 }
 /* A real photo fills the whole box; the drawn placeholder keeps its padding. */
 .art:has(> img) { padding: 0; overflow: hidden; }
@@ -33,11 +101,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-.card:hover .art,
-.card:focus-visible .art {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 0 var(--green-deep);
 }
 
 .badge {
@@ -55,12 +118,15 @@
 .name {
   font-size: 15px;
   font-weight: 600;
+  padding: 0 6px;
 }
 .price {
   font-size: 14px;
   opacity: 0.75;
+  padding: 0 6px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .art { transition: none; }
+  .card, .item, .item::before { transition: none; }
+  .launch { animation: none; }
 }

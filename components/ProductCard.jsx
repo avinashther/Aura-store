@@ -1,13 +1,13 @@
-import Link from "next/link";
+import CardLink from "./CardLink";
 import ProductArt from "./ProductArt";
 import { formatPrice, isSoldOut } from "@/lib/products";
 import styles from "./ProductCard.module.css";
 
-// One product tile. The whole card is a link to the product page.
+// One product card. The whole card is a link to the product page (see CardLink).
 export default function ProductCard({ product }) {
   const soldOut = isSoldOut(product);
   return (
-    <Link href={`/product/${product.slug}`} className={styles.card}>
+    <CardLink href={`/product/${product.slug}`}>
       <div className={styles.art}>
         <ProductArt product={product} />
         {soldOut ? (
@@ -18,7 +18,7 @@ export default function ProductCard({ product }) {
       </div>
       <h3 className={styles.name}>{product.name}</h3>
       <p className={styles.price}>{formatPrice(product.price)}</p>
-    </Link>
+    </CardLink>
   );
 }
 
