@@ -2,6 +2,7 @@ import Link from "next/link";
 import Logo from "./Logo";
 import { CATEGORIES } from "@/lib/products";
 import { whatsappReady, whatsappUrl } from "@/lib/whatsapp";
+import { INSTAGRAM_URL } from "@/lib/shop";
 import styles from "./Footer.module.css";
 
 // Update this once a year. (Next.js 16 does not allow new Date() in server
@@ -45,6 +46,11 @@ export default function Footer() {
               ) : (
                 <a href="#">Contact</a>
               )}
+            </li>
+            <li>
+              <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+                Instagram
+              </a>
             </li>
           </ul>
         </nav>
