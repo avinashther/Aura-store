@@ -12,7 +12,6 @@ export const TYPES = [
   { value: "tee", label: "T-shirt" },
   { value: "hoodie", label: "Hoodie" },
   { value: "pants", label: "Pants" },
-  { value: "jacket", label: "Jacket" },
 ];
 
 // How many photos one product can have.
