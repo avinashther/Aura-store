@@ -1,0 +1,21 @@
+.bag { display: block; overflow: visible; transition: transform 0.2s ease; }
+
+.front { fill: #4f7a3a; }          /* the bag's front, a touch lighter than the brand green */
+.shade { fill: #2f4b22; opacity: 0.35; } /* diagonal fold shadow */
+.side  { fill: #2c4620; }          /* the side panel, darker, like the reference */
+
+.rope {
+  fill: none;
+  stroke: #b98a56;                 /* tan rope */
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+.ring {
+  fill: #f4f3ee;
+  stroke: #b98a56;
+  stroke-width: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bag { transition: none; }
+}
