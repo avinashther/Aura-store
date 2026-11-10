@@ -30,7 +30,8 @@
   gap: 16px;
 }
 @media (min-width: 700px) {
-  .cats { grid-template-columns: repeat(3, 1fr); }
+  /* as many equal columns as there are categories, so the row is always full width */
+  .cats { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 }
 .cat {
   display: flex;

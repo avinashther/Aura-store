@@ -34,7 +34,9 @@ export default function ShopPage({ searchParams }) {
 // The filters live in the URL:  /shop?category=tops&sort=price-asc
 // That means every filter combination has its own shareable link.
 async function ShopContent({ searchParams }) {
-  const { category, sort = "new" } = await searchParams;
+  const { category: rawCategory, sort = "new" } = await searchParams;
+  // an old or made-up category in the link (like the removed "outerwear") is just ignored
+  const category = CATEGORIES.some((c) => c.slug === rawCategory) ? rawCategory : undefined;
 
   // The database does the filtering and sorting for us.
   const items = await getProducts({ category, sort });
