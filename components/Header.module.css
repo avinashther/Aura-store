@@ -72,6 +72,40 @@
   transform: scaleX(1);
 }
 
+/* The bag icon link (top right) */
+.links a.bagLink {
+  display: flex;
+  padding: 7px 8px;       /* a comfortable size to tap with a thumb */
+  margin-right: -8px;     /* so the icon still lines up with the page edge */
+}
+.bagLink::after { display: none; } /* no underline for the icon */
+.bagLink:hover svg,
+.bagLink:focus-visible svg { transform: translateY(-2px) rotate(-4deg); }
+
+/* the little round number on the bag */
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--green-deep);
+  color: var(--cream);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 0 0 2px var(--cream); /* a ring so it stands out from the bag */
+  animation: badgePop 0.3s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes badgePop {
+  from { transform: scale(0.4); }
+  to   { transform: scale(1); }
+}
+
 .menuBtn {
   justify-self: start;
   font-size: 14px;
@@ -110,4 +144,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .links a::after { transition: none; }
+  .bagLink:hover svg, .bagLink:focus-visible svg { transform: none; }
+  .badge { animation: none; }
 }

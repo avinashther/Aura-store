@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import BagIcon from "./BagIcon";
 import Logo from "./Logo";
 import { useBagCount } from "@/lib/cartStore";
 import styles from "./Header.module.css";
@@ -57,7 +58,19 @@ export default function Header() {
         {/* Right side */}
         <ul className={`${styles.links} ${styles.right}`}>
           <li>
-            <Link href="/cart">Bag ({cartCount})</Link>
+            <Link
+              href="/cart"
+              className={styles.bagLink}
+              aria-label={cartCount === 1 ? "Bag, 1 item" : `Bag, ${cartCount} items`}
+            >
+              <BagIcon />
+              {cartCount > 0 && (
+                // key = the number, so the badge "pops" each time the count changes
+                <span key={cartCount} className={styles.badge} aria-hidden="true">
+                  {cartCount > 9 ? "9+" : cartCount}
+                </span>
+              )}
+            </Link>
           </li>
         </ul>
       </nav>
